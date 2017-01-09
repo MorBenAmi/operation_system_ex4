@@ -65,3 +65,8 @@ void close_mutex(char* mutex_name)
 
 	CloseHandle(mutex);
 }
+
+HANDLE open_mutex(char* mutex_name) 
+{
+	return OpenMutex(SYNCHRONIZE, TRUE, (LPCTSTR)mutex_name);
+}

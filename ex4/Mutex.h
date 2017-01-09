@@ -12,4 +12,6 @@ BOOL unlock_mutex(char* mutex_name);
 
 void close_mutex(char* mutex_name);
 
+HANDLE open_mutex(char* mutex_name);
+
 #endif
