@@ -4,4 +4,9 @@
 
 DWORD WINAPI WaitForMessage(LPVOID lpParam);
 
+typedef struct data_communication
+{
+	HANDLE* semaphore;
+} data_communication;
+
 #endif

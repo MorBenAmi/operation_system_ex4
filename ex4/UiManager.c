@@ -2,23 +2,22 @@
 #include <stdlib.h>
 #include "UiManager.h"
 #include "Mutex.h"
-#include "MutexConstants.h"
+#include "Semaphore.h"
 
 DWORD WINAPI readInputFromUser(LPVOID lpParam)
 {
 	char current_char;
 	int index = 0;
-	char *input = (char *)lpParam;
+	data_ui *data = (data_ui *)lpParam;
 
-	lock_mutex(MUTEX_NAME_USER_ENTERED);
 	printf("Enter command:\n");
 	while ((current_char = getchar()) != '\n')
 	{
-		input[index++] = current_char;
+		data->command[index++] = current_char;
 	}
-	input[index++] = '\n';
-	input[index] = '\0';
-
-	unlock_mutex(MUTEX_NAME_USER_ENTERED);
+	data->command[index++] = '\n';
+	data->command[index] = '\0';
+	
+	release_semaphore(data->semaphore);
 	return GetLastError();
 }

@@ -9,33 +9,40 @@ Exercise 3*/
 #include "ClientCommunicationThread.h"
 #include "Log.h"
 #include "Mutex.h"
-#include "MutexConstants.h"
+#include "Semaphore.h"
 
-void runClientCommunicationThread();
+void runClientCommunicationThread(data_communication *communication);
 
-void runUiThread(char *command);
+void runUiThread(data_ui *ui);
 
 /*oOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoO*/
 void runClient()
 {
-	char command[MAX_COMMAND_SIZE]={NULL};
-	HANDLE uiHandle = NULL;
-	
 	HANDLE mutexes[2]={NULL};
 	DWORD lock_result;
 
-	runUiThread(command);
-	runClientCommunicationThread();
+	HANDLE sem_ui = NULL;
+	HANDLE sem_commnunication = NULL;
+	data_ui ui;
+	data_communication communication;
 
-	Sleep(1000); //todo fix. maybe send an event that it is done loading
+	ui.semaphore = &sem_ui;
+	communication.semaphore = &sem_commnunication;
 
-	mutexes[0] = open_mutex(MUTEX_NAME_USER_ENTERED);
-	mutexes[1] = open_mutex(MUTEX_NAME_INCOMING_MESSAGE);
-	if (mutexes[0] == NULL || mutexes[1] == NULL) 
+	sem_ui = create_semaphore("UserEnteredTextSemaphore");
+	sem_commnunication = create_semaphore("IncomingMessageFromServerSemaphore");
+
+	mutexes[0] = sem_ui;
+	mutexes[1] = sem_commnunication;
+
+	runUiThread(&ui);
+	runClientCommunicationThread(&communication);
+
+	if (mutexes[0] == NULL) 
 	{ 
 		printf("ERROR\n\n");
 	}
-	//todo 
+	
 	lock_result = (WaitForMultipleObjects(2, mutexes, FALSE, INFINITE));
 	switch (lock_result)
 	{
@@ -52,16 +59,16 @@ void runClient()
 			break;
 	}
 
-	printf("com: %s", command);
+	printf("com: %s", ui.command);
 
 	//todo remove
 	getchar();
 }
 
-void runClientCommunicationThread() 
+void runClientCommunicationThread(data_communication *communication) 
 {
 	HANDLE clientCommunicationHandle = NULL;
-	clientCommunicationHandle = CreateThread(NULL, 0, WaitForMessage, NULL, 0, NULL);
+	clientCommunicationHandle = CreateThread(NULL, 0, WaitForMessage, communication, 0, NULL);
 	if(clientCommunicationHandle == NULL)
 	{
 		printf("Failed to create thread - Error code: 0x%x\n", GetLastError());
@@ -70,10 +77,10 @@ void runClientCommunicationThread()
 	}
 }
 
-void runUiThread(char *command) 
+void runUiThread(data_ui *data) 
 {
 	HANDLE uiHandle = NULL;
-	uiHandle = CreateThread(NULL, 0, readInputFromUser, command, 0, NULL);
+	uiHandle = CreateThread(NULL, 0, readInputFromUser, data, 0, NULL);
 	if(uiHandle == NULL)
 	{
 		printf("Failed to create thread - Error code: 0x%x\n", GetLastError());

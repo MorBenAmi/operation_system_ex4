@@ -81,6 +81,7 @@
     <ClCompile Include="main.c" />
     <ClCompile Include="Mutex.c" />
     <ClCompile Include="Engine.c" />
+    <ClCompile Include="Semaphore.c" />
     <ClCompile Include="UiManager.c" />
   </ItemGroup>
   <ItemGroup>
@@ -89,7 +90,7 @@
     <ClInclude Include="Events.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="Mutex.h" />
-    <ClInclude Include="MutexConstants.h" />
+    <ClInclude Include="Semaphore.h" />
     <ClInclude Include="UiManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

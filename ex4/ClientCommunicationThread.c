@@ -2,11 +2,11 @@
 #include <stdlib.h>
 #include "ClientCommunicationThread.h"
 #include "Mutex.h"
-#include "MutexConstants.h"
+#include "Semaphore.h"
 
 DWORD WINAPI WaitForMessage(LPVOID lpParam)
 {
-	lock_mutex(MUTEX_NAME_INCOMING_MESSAGE);
+	data_communication *commnunication = (data_communication *) lpParam;
 
-	unlock_mutex(MUTEX_NAME_INCOMING_MESSAGE);
+	//ReleaseSemaphore(*commnunication->semaphore, 1, NULL);
 }
