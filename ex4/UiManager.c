@@ -11,7 +11,6 @@ DWORD WINAPI readInputFromUser(LPVOID lpParam)
 	char *input = (char *)lpParam;
 
 	lock_mutex(MUTEX_NAME_USER_ENTERED);
-	lock_mutex(MUTEX_NAME_INCOMING_MESSAGE);
 	printf("Enter command:\n");
 	while ((current_char = getchar()) != '\n')
 	{
@@ -21,6 +20,5 @@ DWORD WINAPI readInputFromUser(LPVOID lpParam)
 	input[index] = '\0';
 
 	unlock_mutex(MUTEX_NAME_USER_ENTERED);
-	unlock_mutex(MUTEX_NAME_INCOMING_MESSAGE);
 	return GetLastError();
 }
