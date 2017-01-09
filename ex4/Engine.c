@@ -21,22 +21,12 @@ void runClient()
 	HANDLE mutexes[2]={NULL};
 	DWORD lock_result;
 
-	HANDLE sem_ui = NULL;
-	HANDLE sem_commnunication = NULL;
 	data_ui ui;
 	data_communication communication;
-
-	ui.semaphore = &sem_ui;
-	communication.semaphore = &sem_commnunication;
-
-	sem_ui = create_semaphore("UserEnteredTextSemaphore");
-	sem_commnunication = create_semaphore("IncomingMessageFromServerSemaphore");
-
-	mutexes[0] = sem_ui;
-	mutexes[1] = sem_commnunication;
-
 	runUiThread(&ui);
 	runClientCommunicationThread(&communication);
+	mutexes[0] = ui.semaphore;
+	mutexes[1] = communication.semaphore;
 
 	if (mutexes[0] == NULL) 
 	{ 
@@ -68,6 +58,9 @@ void runClient()
 void runClientCommunicationThread(data_communication *communication) 
 {
 	HANDLE clientCommunicationHandle = NULL;
+
+	communication->semaphore = create_semaphore("IncomingMessageFromServerSemaphore");
+
 	clientCommunicationHandle = CreateThread(NULL, 0, WaitForMessage, communication, 0, NULL);
 	if(clientCommunicationHandle == NULL)
 	{
@@ -77,10 +70,13 @@ void runClientCommunicationThread(data_communication *communication)
 	}
 }
 
-void runUiThread(data_ui *data) 
+void runUiThread(data_ui *ui) 
 {
 	HANDLE uiHandle = NULL;
-	uiHandle = CreateThread(NULL, 0, readInputFromUser, data, 0, NULL);
+
+	ui->semaphore = create_semaphore("UserEnteredTextSemaphore");
+	
+	uiHandle = CreateThread(NULL, 0, readInputFromUser, ui, 0, NULL);
 	if(uiHandle == NULL)
 	{
 		printf("Failed to create thread - Error code: 0x%x\n", GetLastError());

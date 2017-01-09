@@ -4,6 +4,6 @@
 
 HANDLE create_semaphore(char* name);
 
-void release_semaphore(HANDLE *semaphore);
+void release_semaphore(HANDLE semaphore);
 
 #endif
