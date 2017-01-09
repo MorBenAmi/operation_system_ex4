@@ -11,11 +11,11 @@ Exercise 3*/
 #include "MutexConstants.h"
 
 /*oOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoO*/
-int main(int argc, char* argv[])
+void runClient()
 {
 	char command[MAX_COMMAND_SIZE]={NULL};
 	HANDLE uiHandle = NULL;
-	HANDLE mutexes[2]={NULL} ;
+	HANDLE mutexes[2]={NULL};
 	DWORD lock_result;
 
 	uiHandle = CreateThread(NULL, 0, readInputFromUser, command, 0, NULL);
@@ -23,9 +23,9 @@ int main(int argc, char* argv[])
 	{
 		printf("Failed to create thread - Error code: 0x%x\n", GetLastError());
 		write_log("Failed to create thread - Error code: 0x%x\n", GetLastError());
-		return FALSE;
+		return;
 	}
-	WaitForSingleObject(uiHandle,INFINITE);
+	Sleep(1000); //todo fix. maybe send an event that it is done loading
 	mutexes[0] = open_mutex(MUTEX_NAME_USER_ENTERED);
 	if (mutexes[0] == NULL) 
 	{ 
