@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
 	else if(strcmp(mode,"client") == 0)
 	{
 		username = argv[5];
-		runClient();//todo: should send it to client...
+		runClient(port, username);
 	} 
 
 	clean_WSA();
