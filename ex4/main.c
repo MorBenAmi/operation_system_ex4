@@ -39,4 +39,5 @@ int main(int argc, char* argv[])
 
 	clean_WSA();
 	close_log();
-}//main
+	exit(GetLastError());
+}//main1
