@@ -36,4 +36,7 @@ int main(int argc, char* argv[])
 		username = argv[5];
 		runClient();//todo: should send it to client...
 	} 
+
+	clean_WSA();
+	close_log();
 }//main
