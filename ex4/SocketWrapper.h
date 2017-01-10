@@ -16,7 +16,7 @@ BOOL accept_connection(SOCKET listen_sock, SOCKET* accepted_sock);
 
 BOOL sock_listen(int port, SOCKET* listen_sock);
 
-BOOL close_socket(SOCKET sock);
+void close_socket(SOCKET sock);
 
 BOOL receive_from_socket(SOCKET sock, char* received_message);
 

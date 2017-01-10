@@ -47,10 +47,9 @@ BOOL sock_listen(int port ,SOCKET* listen_sock)
 	return TRUE;
 }
 
-BOOL close_socket(SOCKET sock)
+void close_socket(SOCKET sock)
 {
 	closesocket(sock);
-	return TRUE;
 }
 
 BOOL accept_connection(SOCKET listen_socket, SOCKET* accepted_socket)

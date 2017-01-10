@@ -9,6 +9,8 @@
 
 void start_server(int port);
 
-BOOL WaitForPlayers(int port, SOCKET user_sockets[NumOfPlayers], char users[NumOfPlayers][MaxUserNameLength], char symbols[NumOfPlayers]);
+BOOL wait_for_players(int port, SOCKET user_sockets[NumOfPlayers], char users[NumOfPlayers][MaxUserNameLength], char symbols[NumOfPlayers]);
 
-void CloseConnections(SOCKET user_sockets[NumOfPlayers]);
+void close_connections(SOCKET user_sockets[NumOfPlayers]);
+
+void write_to_log_order_of_players(char users[NumOfPlayers][MaxUserNameLength], char symbols[NumOfPlayers]);
