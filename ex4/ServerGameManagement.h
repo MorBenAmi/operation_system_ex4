@@ -1,11 +1,14 @@
-
+#define _WINSOCKAPI_    // stops windows.h including winsock.h
 #include <stdio.h>
 #include "Log.h"
+#include "Mutex.h"
+#include "MutexConstants.h"
 #include "SocketWrapper.h"
 
 #define MaxUserNameLength 31 // including \n
 #define NumOfPlayers 4
-#define MaxServerWelcomeMessageLength 100 //todo: change it to the right length!
+#define MaxServerWelcomeMessageLength 100 //todo: change it to the right length! including \n
+#define MaxPlayerJoinMessageLength 100 //todo: change it to the right length! including \n
 
 void start_server(int port);
 

@@ -23,6 +23,7 @@ BOOL wait_for_players(int port, SOCKET user_sockets[NumOfPlayers], char users[Nu
 	int i = 0;
 	int j = 0;
 	char server_welcome_message[MaxServerWelcomeMessageLength];
+	char player_joined_message[MaxPlayerJoinMessageLength];
 	char player_symbol[2];
 	
 	for(i = 0; i < NumOfPlayers; i++)
@@ -44,6 +45,9 @@ BOOL wait_for_players(int port, SOCKET user_sockets[NumOfPlayers], char users[Nu
 			close_connections(user_sockets);
 			return FALSE;
 		}
+
+		lock_mutex(BROADCAST_MUTEX);
+
 		if(receive_from_socket(user_sockets[i], users[i]) == FALSE)
 		{
 			printf("Failed to get username from user, Error_code: 0x%x",GetLastError());
@@ -51,6 +55,7 @@ BOOL wait_for_players(int port, SOCKET user_sockets[NumOfPlayers], char users[Nu
 			close_socket(user_sockets[i]);
 			user_sockets[i] = INVALID_SOCKET;
 			//todo: return False or should we continue receive new users instead?
+			// if so.. don't forget to release the mutex!
 		}
 		else
 		{
@@ -67,10 +72,26 @@ BOOL wait_for_players(int port, SOCKET user_sockets[NumOfPlayers], char users[Nu
 				close_socket(user_sockets[i]);
 				user_sockets[i] = INVALID_SOCKET;
 				//todo: return False or should we continue receive new users instead?
+				// if so don't forget to release mutex!!
 			}
 			else
+			{
 				write_log(server_welcome_message);
+				memset(player_joined_message, '\0', MaxPlayerJoinMessageLength);
+				strcat(player_joined_message, "New player joined the game: ");
+				strcat(player_joined_message, users[i]);
+				strcat(player_joined_message, " ");
+				strcat(player_joined_message, player_symbol);
+				for(j = 0; j < i; j++)
+				{
+					if(write_to_socket(user_sockets[i], player_joined_message) == FALSE)
+					{
+						//todo: what to do when this sending failed?!
+					}
+				}
+			}
 		}
+		unlock_mutex(BROADCAST_MUTEX);
 	}
 
 	return TRUE;

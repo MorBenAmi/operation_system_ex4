@@ -92,6 +92,7 @@
     <ClInclude Include="Events.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="Mutex.h" />
+    <ClInclude Include="MutexConstants.h" />
     <ClInclude Include="Semaphore.h" />
     <ClInclude Include="UiManager.h" />
     <ClInclude Include="ServerGameManagement.h" />
