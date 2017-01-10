@@ -17,11 +17,12 @@ int main(int argc, char* argv[])
 	int port = 0;
 	char* username = NULL;
 
-	mode = argv[2];
-	port = atoi(argv[3]);
-	log_path = argv[4];
+	mode = argv[1];
+	port = atoi(argv[2]);
+	log_path = argv[3];
 
 	open_log(log_path); //todo: maybe need to change how log works because its uses Global variables
+	//We will need to send it to the client/server
 
 	if(init_WSA() == FALSE)
 	{
