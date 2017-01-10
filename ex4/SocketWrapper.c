@@ -89,3 +89,27 @@ BOOL write_to_socket(SOCKET sock, char* message_to_send)
 {
 	return TRUE;
 }
+
+BOOL connect_socket(int port ,SOCKET* socket_client)
+{
+	SOCKADDR_IN clientService;
+	
+	*socket_client = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if(*socket_client == INVALID_SOCKET)
+	{
+		SetLastError(WSAGetLastError());
+		return FALSE;
+	}
+
+	clientService.sin_family = AF_INET;
+	clientService.sin_port = htons(port);
+	clientService.sin_addr.s_addr = inet_addr("127.0.0.1");
+
+	if ( connect(*socket_client, (SOCKADDR*) &clientService, sizeof(clientService) ) == SOCKET_ERROR) {
+        SetLastError(WSAGetLastError());
+		WSACleanup();
+        return FALSE;
+    }
+
+	return TRUE;
+}
