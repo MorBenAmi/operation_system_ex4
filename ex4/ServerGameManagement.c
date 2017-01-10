@@ -8,7 +8,7 @@ void start_server(int port)
 	//todo: should be in a different thread?
 	if(wait_for_players(port, user_sockets, users, symbols) == FALSE)
 		return;
-	write_to_log_order_of_players(user_sockets, users, symbols);
+	write_to_log_order_of_players(user_sockets, users, symbols); 
 
 }
 
@@ -65,6 +65,7 @@ BOOL wait_for_players(int port, SOCKET user_sockets[NumOfPlayers], char users[Nu
 			strcat(server_welcome_message, users[i]);
 			strcat(server_welcome_message, " your game piece is ");
 			strcat(server_welcome_message, player_symbol);
+			strcat(server_welcome_message, "\n");
 			if(write_to_socket(user_sockets[i], server_welcome_message) == FALSE)
 			{
 				printf("Failed to send game piece to user, Error_code: 0x%x",GetLastError());
@@ -82,6 +83,7 @@ BOOL wait_for_players(int port, SOCKET user_sockets[NumOfPlayers], char users[Nu
 				strcat(player_joined_message, users[i]);
 				strcat(player_joined_message, " ");
 				strcat(player_joined_message, player_symbol);
+				strcat(player_joined_message, "\n");
 				for(j = 0; j < i; j++)
 				{
 					if(write_to_socket(user_sockets[i], player_joined_message) == FALSE)
@@ -104,7 +106,7 @@ void close_connections(SOCKET user_sockets[NumOfPlayers])
 	{
 		if(user_sockets[i] != INVALID_SOCKET)
 		{
-			write_to_socket(user_sockets[i], "Close Connection");
+			write_to_socket(user_sockets[i], "Close Connection\n");
 			close_socket(user_sockets[i]);
 		}
 	}

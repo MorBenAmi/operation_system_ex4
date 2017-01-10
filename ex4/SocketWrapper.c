@@ -75,5 +75,5 @@ BOOL receive_from_socket(SOCKET sock, char* received_message)
 
 BOOL write_to_socket(SOCKET sock, char* message_to_send)
 {
-	return FALSE;
+	return TRUE;
 }
