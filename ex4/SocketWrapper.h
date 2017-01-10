@@ -22,4 +22,6 @@ BOOL receive_from_socket(SOCKET sock, char* received_message);
 
 BOOL write_to_socket(SOCKET sock, char* message_to_send);
 
+BOOL connect_socket(int port, SOCKET* socket);
+
 #endif
