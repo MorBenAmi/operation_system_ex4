@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
 	}
 	else if(strcmp(mode,"client") == 0)
 	{
-		username = argv[5];
+		username = argv[4];
 		runClient(port, username);
 	} 
 
