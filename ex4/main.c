@@ -1,38 +1,39 @@
 /*Limor Mendelzburg 308081389
 	Mor Ben Ami 203607536
 	Exercise 4*/
-#include <Windows.h>
+#define _WINSOCKAPI_    // stops windows.h including winsock.h
+#include <windows.h>
 #include <stdio.h>
 #include "Engine.h"
-
-#define NumOfArguments 4
+#include "ServerGameManagement.h"
+#include "Log.h"
+#include "SocketWrapper.h"
 
 /*oOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoO*/
 int main(int argc, char* argv[])
 {
-	char* mode;
-	//checks if we get all the arguments//
+	char* mode = NULL;
+	char* log_path = NULL;
+	int port = 0;
+	char* username = NULL;
 
-	if(argc!=NumOfArguments)
+	mode = argv[2];
+	port = atoi(argv[3]);
+	log_path = argv[4];
+
+	open_log(log_path); //todo: maybe need to change how log works because its uses Global variables
+
+	if(init_WSA() == FALSE)
 	{
-		printf("ERROR - there is a wrong number of arguments\n");
-		exit(ERROR_BAD_ARGUMENTS);
+		printf("Failed to init WSA, Error_Code: 0x%x", GetLastError());
 	}
-
-	mode = argv[2]; //todo: change this to the correct number
-
-	if(strcmp(mode,"Server") == 0)
+	if(strcmp(mode,"server") == 0)
 	{
-		//todo: call server run
+		start_server(port);
 	}
-	else if(strcmp(mode,"Client") == 0)
+	else if(strcmp(mode,"client") == 0)
 	{
-		runClient();
+		username = argv[5];
+		runClient();//todo: should send it to client...
 	} 
-	else
-	{
-		printf("ERROR - unknown running mode, closing app!\n");
-		exit(ERROR_BAD_ARGUMENTS);
-	}
-
 }//main
