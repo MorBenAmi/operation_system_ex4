@@ -7,6 +7,7 @@
 #include <conio.h>
 #pragma comment(lib, "ws2_32.lib")
 
+#define SRV_ADDRESS "127.0.0.1"
 
 BOOL init_WSA();
 

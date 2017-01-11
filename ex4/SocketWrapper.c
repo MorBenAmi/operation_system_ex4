@@ -32,7 +32,7 @@ BOOL sock_listen(int port, int max_connections, SOCKET* listen_sock)
 
 	listen_addr.sin_family = AF_INET;
 	listen_addr.sin_port = htons(port);
-	listen_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+	listen_addr.sin_addr.s_addr = inet_addr(SRV_ADDRESS);
 
 	if(bind(*listen_sock, (SOCKADDR*)&listen_addr, sizeof(listen_addr)) == SOCKET_ERROR)
 	{
@@ -100,6 +100,7 @@ BOOL receive_from_socket(SOCKET socket, char* buffer)
 		cur_place_ptr += bytes_just_transferred; // <ISP> pointer arithmetic
 		if (cur_place_ptr[-1] == '\n') {
 			//Received all message
+			cur_place_ptr[-1] = '\0';
 			break;
 		}
 	}
@@ -142,7 +143,7 @@ BOOL connect_socket(int port ,SOCKET* socket_client)
 
 	clientService.sin_family = AF_INET;
 	clientService.sin_port = htons(port);
-	clientService.sin_addr.s_addr = inet_addr("127.0.0.1");
+	clientService.sin_addr.s_addr = inet_addr(SRV_ADDRESS);
 
 	if ( connect(*socket_client, (SOCKADDR*) &clientService, sizeof(clientService) ) == SOCKET_ERROR) {
         SetLastError(WSAGetLastError());
