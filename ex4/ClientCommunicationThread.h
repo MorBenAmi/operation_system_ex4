@@ -7,7 +7,8 @@ DWORD WINAPI runClientCommunicatrion(LPVOID lpParam);
 
 typedef struct data_communication
 {
-	HANDLE semaphore;
+	HANDLE IncomingMessageFromServerSemaphore;
+	HANDLE EngineDoneWithServerMessageSemaphore;
 	char message[MAX_COMMAND_SIZE];
 	char *username;
 	int port;

@@ -8,7 +8,8 @@ DWORD WINAPI runUiManager(LPVOID lpParam);
 
 typedef struct data_ui
 {
-	HANDLE semaphore;
+	HANDLE UserEnteredTextSemaphore;
+	HANDLE EngineDoneWithUserMessageSemaphore;
 	char command[MAX_COMMAND_SIZE];
 } data_ui;
 

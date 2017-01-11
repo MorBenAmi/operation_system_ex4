@@ -22,7 +22,7 @@ static DWORD RecvDataThread(SOCKET m_socket, data_communication *communication)
 		else
 		{
 			printf("Recived message from server:%s\n", communication->message);
-			release_semaphore(communication->semaphore);
+			release_semaphore(communication->IncomingMessageFromServerSemaphore);
 		}
 	}
 
@@ -59,5 +59,5 @@ DWORD WINAPI runClientCommunicatrion(LPVOID lpParam)
 		//todo exit and free all
 	}
 	
-	release_semaphore(communication->semaphore);
+	release_semaphore(communication->IncomingMessageFromServerSemaphore);
 }
