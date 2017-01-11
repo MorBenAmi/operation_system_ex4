@@ -7,7 +7,7 @@ Exercise 3*/
 #include <windows.h>
 #include "Engine.h"
 #include "UiManager.h"
-#include "ClientCommunicationThread.h"
+#include "ClientCommunication.h"
 #include "Log.h"
 #include "Mutex.h"
 #include "Semaphore.h"
