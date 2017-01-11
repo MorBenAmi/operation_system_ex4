@@ -17,9 +17,11 @@ void clean_WSA()
 	WSACleanup();
 }
 
-BOOL sock_listen(int port ,SOCKET* listen_sock)
+BOOL sock_listen(int port, int max_connections, SOCKET* listen_sock)
 {
 	SOCKADDR_IN listen_addr;
+	u_long nonblockingMode = 1;
+	int iResult = 0;
 	
 	*listen_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if(*listen_sock == INVALID_SOCKET)
@@ -38,11 +40,15 @@ BOOL sock_listen(int port ,SOCKET* listen_sock)
 		return FALSE;
 	}
 
-	if(listen(*listen_sock,1) == SOCKET_ERROR)
+	if(listen(*listen_sock,max_connections) == SOCKET_ERROR)
 	{
 		SetLastError(WSAGetLastError());
 		return FALSE;
 	}
+
+	iResult = ioctlsocket(*listen_sock, FIONBIO, &nonblockingMode);
+	if (iResult != NO_ERROR)
+	  return FALSE;
 
 	return TRUE;
 }
@@ -62,6 +68,12 @@ BOOL accept_connection(SOCKET listen_socket, SOCKET* accepted_socket)
 	*accepted_socket = accept(listen_socket, (struct sockaddr*)&connect_socket_addr, &addr_len);
 	if(*accepted_socket == INVALID_SOCKET)
 	{
+		if(WSAGetLastError() == WSAEWOULDBLOCK)
+		{
+			//no waiting socket.. return true but not socket was accepted!
+			WSASetLastError(0);
+			return TRUE;
+		}
 		SetLastError(WSAGetLastError());
 		return FALSE;
 	}

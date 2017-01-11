@@ -14,7 +14,7 @@ void clean_WSA();
 
 BOOL accept_connection(SOCKET listen_sock, SOCKET* accepted_sock);
 
-BOOL sock_listen(int port, SOCKET* listen_sock);
+BOOL sock_listen(int port, int max_connections, SOCKET* listen_sock);
 
 void close_socket(SOCKET sock);
 
