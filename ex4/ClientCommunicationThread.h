@@ -3,7 +3,7 @@
 #include <Windows.h>
 
 #define MAX_COMMAND_SIZE 1000 //TODO search for the max sizes
-DWORD WINAPI WaitForMessage(LPVOID lpParam);
+DWORD WINAPI runClientCommunicatrion(LPVOID lpParam);
 
 typedef struct data_communication
 {

@@ -29,13 +29,13 @@ static DWORD RecvDataThread(SOCKET m_socket, data_communication *communication)
 	return 0;
 }
 
-DWORD WINAPI WaitForMessage(LPVOID lpParam)
+DWORD WINAPI runClientCommunicatrion(LPVOID lpParam)
 {
 	SOCKET server_socket;
 	BOOL SendRes;
 	char username_message[256];
 	data_communication *communication = (data_communication *) lpParam;
-	
+
 	if (connect_socket(communication->port, &server_socket) == TRUE) 
 	{
 		printf("Connected to server on port %d\n", communication->port); //todo remove and write to log

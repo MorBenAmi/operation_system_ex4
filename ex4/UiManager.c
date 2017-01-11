@@ -4,7 +4,7 @@
 #include "Mutex.h"
 #include "Semaphore.h"
 
-DWORD WINAPI readInputFromUser(LPVOID lpParam)
+DWORD WINAPI runUiManager(LPVOID lpParam)
 {
 	char current_char;
 	int index = 0;

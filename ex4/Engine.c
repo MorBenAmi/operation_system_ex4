@@ -40,11 +40,11 @@ void runClient(int port, char *username)
 	{
 		case WAIT_OBJECT_0:
 			//thread 0 is done
-			printf("Wait for object 0 is done");
+			printf("Wait for object 0 is done\n");
 			printf("com: %s", ui.command);
 			break;
 		case WAIT_OBJECT_0 + 1:
-			printf("Wait for object 1 is done");
+			printf("Wait for object 1 is done\n");
 			printf("com: %s", communication.message);
 			break;
 			//thread 1 is done
@@ -63,7 +63,7 @@ void runClientCommunicationThread(data_communication *communication)
 
 	communication->semaphore = create_semaphore("IncomingMessageFromServerSemaphore");
 	//todo check if semaphore creation failed
-	clientCommunicationHandle = CreateThread(NULL, 0, WaitForMessage, communication, 0, NULL);
+	clientCommunicationHandle = CreateThread(NULL, 0, runClientCommunicatrion, communication, 0, NULL);
 	if(clientCommunicationHandle == NULL)
 	{
 		printf("Failed to create thread - Error code: 0x%x\n", GetLastError());
@@ -78,7 +78,7 @@ void runUiThread(data_ui *ui)
 
 	ui->semaphore = create_semaphore("UserEnteredTextSemaphore");
 	//todo check if semaphore creation failed
-	uiHandle = CreateThread(NULL, 0, readInputFromUser, ui, 0, NULL);
+	uiHandle = CreateThread(NULL, 0, runUiManager, ui, 0, NULL);
 	if(uiHandle == NULL)
 	{
 		printf("Failed to create thread - Error code: 0x%x\n", GetLastError());
