@@ -82,7 +82,6 @@
     <ClCompile Include="Mutex.c" />
     <ClCompile Include="Engine.c" />
     <ClCompile Include="Semaphore.c" />
-    <ClCompile Include="SocketSendRecvTools.c" />
     <ClCompile Include="UiManager.c" />
     <ClCompile Include="ServerGameManagement.c" />
     <ClCompile Include="SocketWrapper.c" />
@@ -95,7 +94,6 @@
     <ClInclude Include="Mutex.h" />
     <ClInclude Include="MutexConstants.h" />
     <ClInclude Include="Semaphore.h" />
-    <ClInclude Include="SocketSendRecvTools.h" />
     <ClInclude Include="UiManager.h" />
     <ClInclude Include="ServerGameManagement.h" />
     <ClInclude Include="SocketWrapper.h" />

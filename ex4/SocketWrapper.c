@@ -40,7 +40,7 @@ BOOL sock_listen(int port, int max_connections, SOCKET* listen_sock)
 		return FALSE;
 	}
 
-	if(listen(*listen_sock,max_connections) == SOCKET_ERROR)
+	if(listen(*listen_sock,1) == SOCKET_ERROR)
 	{
 		SetLastError(WSAGetLastError());
 		return FALSE;
@@ -80,13 +80,52 @@ BOOL accept_connection(SOCKET listen_socket, SOCKET* accepted_socket)
 	return TRUE;
 }
 
-BOOL receive_from_socket(SOCKET sock, char* received_message)
+BOOL receive_from_socket(SOCKET socket, char* buffer)
 {
+	char* cur_place_ptr = buffer;
+	int bytes_just_transferred;
+	
+	while (1)  
+	{
+		/* send does not guarantee that the entire message is sent */
+		bytes_just_transferred = recv(socket, cur_place_ptr, 100, 0); //todo change to some constant
+		if ( bytes_just_transferred == SOCKET_ERROR ) 
+		{
+			SetLastError(WSAGetLastError());
+			return FALSE;
+		}		
+		else if ( bytes_just_transferred == 0 ) 
+			return FALSE; // recv() returns zero if connection was gracefully disconnected.
+
+		cur_place_ptr += bytes_just_transferred; // <ISP> pointer arithmetic
+		if (cur_place_ptr[-1] == '\n') {
+			//Received all message
+			break;
+		}
+	}
+
 	return TRUE;
 }
 
-BOOL write_to_socket(SOCKET sock, char* message_to_send)
+BOOL write_to_socket(SOCKET socket, char* message_to_send)
 {
+	const char* cur_place_ptr = message_to_send;
+	int bytes_transferred;
+	int remaining_bytes_to_send = strlen(message_to_send);
+	
+	while ( remaining_bytes_to_send > 0 )  
+	{
+		/* send does not guarantee that the entire message is sent */
+		bytes_transferred = send(socket, cur_place_ptr, remaining_bytes_to_send, 0);
+		if ( bytes_transferred == SOCKET_ERROR ) 
+		{
+			SetLastError(WSAGetLastError());
+			return FALSE;
+		}
+		
+		remaining_bytes_to_send -= bytes_transferred;
+		cur_place_ptr += bytes_transferred; // <ISP> pointer arithmetic
+	}
 	return TRUE;
 }
 
