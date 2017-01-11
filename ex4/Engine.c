@@ -22,6 +22,8 @@ void handleServerMessage(data_communication *communication);
 
 void connectToServer(data_communication *communication);
 
+BOOL sendMessageToServer(SOCKET socket, char *message);
+
 /*oOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoO*/
 void runClient(int port, char *username)
 {
@@ -72,14 +74,14 @@ void connectToServer(data_communication *communication)
 	char username_message[256];
 	if (connect_socket(communication->port, &communication->socket) == TRUE) 
 	{
-		printf("Connected to server on port %d\n", communication->port); //todo remove and write to log
+		printf("Connected to server on port %d\n", communication->port);
+		write_log("Connected to server on port %d\n", communication->port);
 		memset(username_message, '\0', 256);
 		strcat(username_message, "username=");
 		strcat(username_message, communication->username);
-		strcat(username_message, "\n");
-		printf("sending %s\n", username_message);
+		printf("sending %s\\n\n", username_message);
 
-		if ( write_to_socket(communication->socket, username_message) == FALSE ) 
+		if (sendMessageToServer(communication->socket, username_message) == FALSE ) 
 		{
 			printf("Socket error while trying to write data to socket\n");
 			//todo error
@@ -88,6 +90,7 @@ void connectToServer(data_communication *communication)
 	else 
 	{
 		printf("Failed connecting to server on port %d", communication->port);
+		write_log("Failed connecting to server on port %d", communication->port);
 		//todo exit and free all
 	}
 }
@@ -140,4 +143,11 @@ void handleServerMessage(data_communication *communication)
 	printf("Recieved from message: %s\n", communication->message);
 	Sleep(1000); //todo remove - only for debug
 	release_semaphore(communication->EngineDoneWithServerMessageSemaphore);
+}
+
+BOOL sendMessageToServer(SOCKET socket, char *message)
+{
+	write_log("Send to server:%s\\n", message);
+	strcat(message, "\n");
+	return write_to_socket(socket, message); 
 }

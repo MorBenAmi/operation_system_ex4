@@ -14,7 +14,6 @@ DWORD WINAPI runClientCommunicatrion(LPVOID lpParam)
 		{
 			release_semaphore(communication->IncomingMessageFromServerSemaphore);
 			WaitForSingleObject(communication->EngineDoneWithServerMessageSemaphore, INFINITE);
-			close_log();
 		}
 		else 
 		{
