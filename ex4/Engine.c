@@ -50,16 +50,12 @@ void runClient(int port, char *username)
 		lock_result = (WaitForMultipleObjects(2, mutexes, FALSE, INFINITE));
 		switch (lock_result)
 		{
-			case WAIT_OBJECT_0:
-				//thread 0 is done
-				printf("Wait for object 0 is done\n");
+			case WAIT_OBJECT_0:				
 				handleUserMessage(&ui);
 				break;
 			case WAIT_OBJECT_0 + 1:
-				printf("com: %s", communication.message);
 				handleServerMessage(&communication);
 				break;
-				//thread 1 is done
 			default:
 				printf("result: 0x%x\n", GetLastError());
 				//todo exit
@@ -135,11 +131,13 @@ void runUiThread(data_ui *ui)
 void handleUserMessage(data_ui *ui)
 {
 	printf("Recieved: %s\n", ui->command);
-	Sleep(1000);
+	Sleep(1000); //todo remove - only for debug
 	release_semaphore(ui->EngineDoneWithUserMessageSemaphore);
 }
 
 void handleServerMessage(data_communication *communication)
 {
-
+	printf("Recieved from message: %s\n", communication->message);
+	Sleep(1000); //todo remove - only for debug
+	release_semaphore(communication->EngineDoneWithServerMessageSemaphore);
 }
