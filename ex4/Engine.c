@@ -3,6 +3,7 @@ Mor Ben Ami 203607536
 Exercise 3*/
 #include <stdio.h>
 #include <stdlib.h>
+#include "SocketWrapper.h"
 #include <windows.h>
 #include "Engine.h"
 #include "UiManager.h"
@@ -19,6 +20,8 @@ void handleUserMessage(data_ui *ui);
 
 void handleServerMessage(data_communication *communication);
 
+void connectToServer(data_communication *communication);
+
 /*oOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoO*/
 void runClient(int port, char *username)
 {
@@ -29,6 +32,9 @@ void runClient(int port, char *username)
 	data_communication communication;
 	communication.port = port;
 	communication.username = username;
+	
+	connectToServer(&communication);
+	
 	runUiThread(&ui);
 	runClientCommunicationThread(&communication);
 	mutexes[0] = ui.UserEnteredTextSemaphore;
@@ -63,6 +69,31 @@ void runClient(int port, char *username)
 
 	//todo remove
 	getchar();
+}
+
+void connectToServer(data_communication *communication) 
+{
+	char username_message[256];
+	if (connect_socket(communication->port, &communication->socket) == TRUE) 
+	{
+		printf("Connected to server on port %d\n", communication->port); //todo remove and write to log
+		memset(username_message, '\0', 256);
+		strcat(username_message, "username=");
+		strcat(username_message, communication->username);
+		strcat(username_message, "\n");
+		printf("sending %s\n", username_message);
+
+		if ( write_to_socket(communication->socket, username_message) == FALSE ) 
+		{
+			printf("Socket error while trying to write data to socket\n");
+			//todo error
+		}
+	}
+	else 
+	{
+		printf("Failed connecting to server on port %d", communication->port);
+		//todo exit and free all
+	}
 }
 
 void runClientCommunicationThread(data_communication *communication) 

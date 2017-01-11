@@ -9,6 +9,7 @@ typedef struct data_communication
 {
 	HANDLE IncomingMessageFromServerSemaphore;
 	HANDLE EngineDoneWithServerMessageSemaphore;
+	SOCKET socket;
 	char message[MAX_COMMAND_SIZE];
 	char *username;
 	int port;
