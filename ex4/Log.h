@@ -7,4 +7,6 @@ void close_log();
 
 void write_log(_In_z_ _Printf_format_string_ const char * _Format, ...);
 
+void write_log_and_print(_In_z_ _Printf_format_string_ const char * _Format, ...);
+
 #endif

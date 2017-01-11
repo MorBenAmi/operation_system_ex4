@@ -46,3 +46,18 @@ void write_log(_In_z_ _Printf_format_string_ const char * _Format, ...)
 	
     va_end(args);
 }
+
+void write_log_and_print(_In_z_ _Printf_format_string_ const char * _Format, ...)
+{
+	va_list args;
+	if(log_file == NULL)
+		return;
+    va_start(args, _Format);
+	
+	lock_mutex("LogFile");
+    vfprintf(log_file, _Format, args);
+	vprintf(_Format, args);
+	unlock_mutex("LogFile");
+	
+	va_end(args);
+}

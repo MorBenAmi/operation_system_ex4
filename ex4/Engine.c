@@ -16,7 +16,9 @@ void runClientCommunicationThread(data_communication *communication);
 
 void runUiThread(data_ui *ui);
 
-void handleUserMessage(data_ui *ui);
+void receivedUserMessage(data_ui *ui);
+
+void handleUserCommand(char *command);
 
 void handleServerMessage(data_communication *communication);
 
@@ -53,7 +55,7 @@ void runClient(int port, char *username)
 		switch (lock_result)
 		{
 			case WAIT_OBJECT_0:				
-				handleUserMessage(&ui);
+				receivedUserMessage(&ui);
 				break;
 			case WAIT_OBJECT_0 + 1:
 				handleServerMessage(&communication);
@@ -74,8 +76,8 @@ void connectToServer(data_communication *communication)
 	char username_message[256];
 	if (connect_socket(communication->port, &communication->socket) == TRUE) 
 	{
-		printf("Connected to server on port %d\n", communication->port);
-		write_log("Connected to server on port %d\n", communication->port);
+		write_log_and_print("Connected to server on port %d\n", communication->port);
+		
 		memset(username_message, '\0', 256);
 		strcat(username_message, "username=");
 		strcat(username_message, communication->username);
@@ -89,8 +91,7 @@ void connectToServer(data_communication *communication)
 	}
 	else 
 	{
-		printf("Failed connecting to server on port %d", communication->port);
-		write_log("Failed connecting to server on port %d", communication->port);
+		write_log_and_print("Failed connecting to server on port %d\n", communication->port);		
 		//todo exit and free all
 	}
 }
@@ -131,16 +132,30 @@ void runUiThread(data_ui *ui)
 	}
 }
 
-void handleUserMessage(data_ui *ui)
+void receivedUserMessage(data_ui *ui)
 {
 	printf("Recieved: %s\n", ui->command);
 	Sleep(1000); //todo remove - only for debug
 	release_semaphore(ui->EngineDoneWithUserMessageSemaphore);
 }
 
+void handleUserCommand(char *command)
+{
+	//todo validate and handle message
+	//if ilegal arg
+	write_log_and_print("Illegal argument for command %s. Command format is %s bla", 
+		command, command);
+
+	//if not
+	write_log_and_print("Command %s is not recognized. Possible commands are:players, message, broadcast and play", 
+		command);
+}
+
+
+
 void handleServerMessage(data_communication *communication)
 {
-	printf("Recieved from message: %s\n", communication->message);
+	write_log_and_print("Received from message: %s\n", communication->message);
 	Sleep(1000); //todo remove - only for debug
 	release_semaphore(communication->EngineDoneWithServerMessageSemaphore);
 }

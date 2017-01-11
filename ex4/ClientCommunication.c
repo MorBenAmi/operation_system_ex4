@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include "SocketWrapper.h"
 #include "ClientCommunication.h"
 #include "Mutex.h"

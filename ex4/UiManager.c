@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include "UiManager.h"
 #include "Mutex.h"
 #include "Semaphore.h"
