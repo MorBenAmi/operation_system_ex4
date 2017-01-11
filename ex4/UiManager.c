@@ -16,7 +16,6 @@ DWORD WINAPI readInputFromUser(LPVOID lpParam)
 		data->command[index++] = current_char;
 	}
 	data->command[index++] = '\n';
-	data->command[index] = '\0';
 	
 	release_semaphore(data->semaphore);
 	return GetLastError();
