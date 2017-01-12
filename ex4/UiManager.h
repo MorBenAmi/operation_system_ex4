@@ -10,6 +10,7 @@ typedef struct data_ui
 {
 	HANDLE UserEnteredTextSemaphore;
 	HANDLE EngineDoneWithUserMessageSemaphore;
+	HANDLE PlayersTurnEvent;
 	char command[MAX_COMMAND_SIZE];
 } data_ui;
 

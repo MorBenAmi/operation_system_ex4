@@ -136,6 +136,8 @@ void receivedUserMessage(data_ui *ui)
 {
 	printf("Recieved: %s\n", ui->command);
 	Sleep(1000); //todo remove - only for debug
+	handleUserCommand(ui->command);
+	//if play SetEvent(ui->PlayersTurnEvent);
 	release_semaphore(ui->EngineDoneWithUserMessageSemaphore);
 }
 
@@ -149,20 +151,21 @@ void handleUserCommand(char *command)
 	//if not
 	write_log_and_print("Command %s is not recognized. Possible commands are:players, message, broadcast and play", 
 		command);
+
+	// if Game ended: close_socket(); 
 }
-
-
 
 void handleServerMessage(data_communication *communication)
 {
-	write_log_and_print("Received from message: %s\n", communication->message);
+	write_log_and_print("Received from server: %s\\n\n", communication->message);
 	Sleep(1000); //todo remove - only for debug
+	//if "your play to turn" reset - PlayersTurnEvent
 	release_semaphore(communication->EngineDoneWithServerMessageSemaphore);
 }
 
 BOOL sendMessageToServer(SOCKET socket, char *message)
 {
-	write_log("Send to server:%s\\n", message);
+	write_log("Send to server:%s\\n\n", message);
 	strcat(message, "\n");
 	return write_to_socket(socket, message); 
 }

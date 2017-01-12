@@ -15,7 +15,6 @@ BOOL lock_mutex(char* mutex_name)
 		printf("failed to get mutex: %s\n",mutex_name);
 		if(strcmp(mutex_name,"LogFile") != 0)
 			write_log("failed to get mutex: %s\n",mutex_name);
-		SetEvent(AllThreadsMustEnd);
 		return FALSE;
 	}
 	SetLastError(last_error);
@@ -43,7 +42,6 @@ BOOL unlock_mutex(char* mutex_name)
 		printf("failed to get mutex: %s, Error code: 0x%x\n",mutex_name, GetLastError());
 		if(strcmp(mutex_name,"LogFile") != 0)
 			write_log("failed to get mutex: %s, Error code: 0x%x\n",mutex_name, GetLastError());
-		SetEvent(AllThreadsMustEnd);
 		return FALSE;
 	}
 	SetLastError(last_error);

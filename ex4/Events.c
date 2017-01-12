@@ -1,15 +1,10 @@
 #include "Events.h"
 
-HANDLE AllThreadsMustEnd;
-/*oOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoO*/
-//the file containe all the shared events in the program// 
-/*oOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoO*/
-
 //this function initialize the events//
-BOOL InitEvents()
+BOOL InitEvent(HANDLE *evnt, char *event_name)
 {
-	AllThreadsMustEnd = CreateEvent(NULL, TRUE, FALSE, (LPCWSTR)"AllThreadsMustEnd");
-	if(AllThreadsMustEnd == NULL)
+	*evnt = CreateEvent(NULL, TRUE, FALSE, (LPCWSTR)event_name);
+	if(evnt == NULL)
 	{
 		printf("ERROR in GetExitCodeProcess function\n");
 		write_log("!!! ERROR in GetExitCodeProcess function. Error code: 0x%x !!!\n", GetLastError()); 

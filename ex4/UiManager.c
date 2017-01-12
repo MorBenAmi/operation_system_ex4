@@ -1,15 +1,21 @@
 #include "UiManager.h"
 #include "Mutex.h"
 #include "Semaphore.h"
-
+#include "Events.h"
+#define PLAY "play"
 void readFromClient(char *command);
 
 DWORD WINAPI runUiManager(LPVOID lpParam)
 {
 	data_ui *data = (data_ui *)lpParam;
+	InitEvent(&data->PlayersTurnEvent, "PlayersTurnEvent");
 	while (1) 
 	{
 		readFromClient(data->command);
+		if (strcmp(data->command, PLAY) == 0)
+		{
+			WaitForSingleObject(data->PlayersTurnEvent, INFINITE);
+		}
 		release_semaphore(data->UserEnteredTextSemaphore);
 		WaitForSingleObject(data->EngineDoneWithUserMessageSemaphore, INFINITE);
 	}
@@ -26,5 +32,4 @@ void readFromClient(char *command)
 	{
 		command[index++] = current_char;
 	}
-	command[index++] = '\n';
 }

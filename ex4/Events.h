@@ -5,8 +5,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-extern HANDLE AllThreadsMustEnd;
-
-BOOL InitEvents();
+BOOL InitEvent(HANDLE *evnt, char *event_name);
 
 #endif
