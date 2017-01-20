@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
 
 	if(init_WSA() == FALSE)
 	{
-		printf("Failed to init WSA, Error_Code: 0x%x", GetLastError());
+		printf("Failed to init WSA, Error_Code: 0x%x\n", GetLastError());
 	}
 	if(strcmp(mode,"server") == 0)
 	{
