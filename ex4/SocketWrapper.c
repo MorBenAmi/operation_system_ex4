@@ -40,7 +40,7 @@ BOOL sock_listen(int port, int max_connections, SOCKET* listen_sock)
 		return FALSE;
 	}
 
-	if(listen(*listen_sock,1) == SOCKET_ERROR)
+	if(listen(*listen_sock, SOMAXCONN) == SOCKET_ERROR)
 	{
 		SetLastError(WSAGetLastError());
 		return FALSE;
