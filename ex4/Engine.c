@@ -166,6 +166,7 @@ void handleServerMessage(data_communication *communication)
 BOOL sendMessageToServer(SOCKET socket, char *message)
 {
 	write_log("Send to server:%s\\n\n", message);
+	//todo: tal, i think it's better to add the \n from outside..because strcat does not validate that you have anough space for appending this \n in message
 	strcat(message, "\n");
 	return write_to_socket(socket, message); 
 }
