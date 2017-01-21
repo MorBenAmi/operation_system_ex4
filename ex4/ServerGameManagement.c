@@ -2,15 +2,19 @@
 
 void start_server(int port)
 {
-	char users[NUM_OF_PLAYERS][MAX_USER_NAME_LENGTH];
-	SOCKET user_sockets[NUM_OF_PLAYERS];
-	char symbols[NUM_OF_PLAYERS];
+	char users[MAX_NUM_OF_PLAYERS][MAX_USER_NAME_LENGTH];
+	SOCKET user_sockets[MAX_NUM_OF_PLAYERS];
+	char symbols[MAX_NUM_OF_PLAYERS];
+	communication_data players_communication_data[MAX_NUM_OF_PLAYERS];
+	HANDLE players_communication_thread[MAX_NUM_OF_PLAYERS];
+	int num_of_threads = 0;
+
 	symbols[0] = '@';
 	symbols[1] = '#';
 	symbols[2] = '%';
 	symbols[3] = '*';
 
-	if(wait_for_players(port, user_sockets, users, symbols) == FALSE)
+	if(wait_for_players(port, user_sockets, users, symbols, players_communication_data, players_communication_thread) == FALSE)
 	{
 		close_connections(user_sockets);
 		return;
@@ -24,71 +28,18 @@ void start_server(int port)
 		return;
 	}
 
+	//todo: play the game? do some magic to know when message arrives... or when the game is finished..
+
+	while(players_communication_thread[num_of_threads] != NULL)
+		num_of_threads++;
+	WaitForMultipleObjects(num_of_threads, players_communication_thread, TRUE, INFINITE);
+
 	close_connections(user_sockets);
 }
 
-void write_to_log_order_of_players(SOCKET user_sockets[NUM_OF_PLAYERS], char users[NUM_OF_PLAYERS][MAX_USER_NAME_LENGTH], char symbols[NUM_OF_PLAYERS])
-{
-	int i = 0;
-	write_log("The order of players' in the game is ");
-	for(i = 0; i<NUM_OF_PLAYERS; i++)
-	{
-		if(user_sockets[i] != INVALID_SOCKET)
-		{
-			if(i > 0)
-				write_log(",");
-			write_log("%s",users[i]);
-		}
-	}
-	write_log(".\n");
-}
-
-BOOL broadcast_players(SOCKET user_sockets[NUM_OF_PLAYERS], char users[NUM_OF_PLAYERS][MAX_USER_NAME_LENGTH], char symbols[NUM_OF_PLAYERS])
-{
-	int i = 0;
-
-	lock_mutex(BROADCAST_MUTEX);
-	for(i = 0; i < NUM_OF_PLAYERS; i++)
-	{
-		if(user_sockets[i] != INVALID_SOCKET)
-		{
-			if(send_players_to_user(user_sockets[i], user_sockets, users, symbols) == FALSE)
-			{
-				unlock_mutex(BROADCAST_MUTEX);
-				return FALSE;
-			}
-		}
-	}
-	unlock_mutex(BROADCAST_MUTEX);
-	write_log("Players' game pieces' selection broadcasted to all users.");
-	return TRUE;
-}
-
-BOOL send_players_to_user(SOCKET user_sock, SOCKET user_sockets[NUM_OF_PLAYERS], char users[NUM_OF_PLAYERS][MAX_USER_NAME_LENGTH], char symbols[NUM_OF_PLAYERS])
-{
-	char players_message[MAX_PLAYERS_LIST_MESSAGE_LENGTH];
-	char user_symbol[2];
-	int i = 0;
-
-	memset(user_symbol, '\0', 2);
-	memset(players_message, '\0', MAX_PLAYERS_LIST_MESSAGE_LENGTH);
-	for(i = 0; i < NUM_OF_PLAYERS; i++)
-	{
-		if(user_sockets[i] != INVALID_SOCKET)
-		{
-			user_symbol[0] = symbols[i];
-			if(i > 0)
-				strcat(players_message, ",");
-			strcat(players_message, users[i]);
-			strcat(players_message, "-");
-			strcat(players_message, user_symbol);
-		}
-	}
-	strcat(players_message, ".\n");
-	return write_to_socket(user_sock, players_message);
-}
-
-BOOL wait_for_players(int port, SOCKET user_sockets[NUM_OF_PLAYERS], char users[NUM_OF_PLAYERS][MAX_USER_NAME_LENGTH], char symbols[NUM_OF_PLAYERS])
+BOOL wait_for_players(int port, SOCKET user_sockets[MAX_NUM_OF_PLAYERS], 
+	char users[MAX_NUM_OF_PLAYERS][MAX_USER_NAME_LENGTH], char symbols[MAX_NUM_OF_PLAYERS], 
+	communication_data players_communications[MAX_NUM_OF_PLAYERS], HANDLE players_communication_thread[MAX_NUM_OF_PLAYERS])
 {
 	SOCKET listen_sock;
 	int i = 0;
@@ -99,13 +50,13 @@ BOOL wait_for_players(int port, SOCKET user_sockets[NUM_OF_PLAYERS], char users[
 	char player_joined_message[MAX_PLAYER_JOINED_MESSAGE_LENGTH];
 	char player_symbol[2];
 	
-	for(i = 0; i < NUM_OF_PLAYERS; i++)
+	for(i = 0; i < MAX_NUM_OF_PLAYERS; i++)
 	{
 		user_sockets[i] = INVALID_SOCKET;
 		memset(users[i],'\0', MAX_USER_NAME_LENGTH);
 	}
 
-	if(sock_listen(port, NUM_OF_PLAYERS, &listen_sock) == FALSE)
+	if(sock_listen(port, MAX_NUM_OF_PLAYERS, &listen_sock) == FALSE)
 	{
 		printf("Failed on listening port:%d, Error_code: 0x%x\n",port, GetLastError());
 		write_log("Failed on listening port:%d, Error_code: 0x%x\n",port, GetLastError());
@@ -113,7 +64,7 @@ BOOL wait_for_players(int port, SOCKET user_sockets[NUM_OF_PLAYERS], char users[
 	}
 
 	time(&start_time);
-	while(connected_users_count < NUM_OF_PLAYERS)
+	while(connected_users_count < MAX_NUM_OF_PLAYERS)
 	{
 		//wait for connection to occure
 		while(user_sockets[connected_users_count] == INVALID_SOCKET)
@@ -146,8 +97,8 @@ BOOL wait_for_players(int port, SOCKET user_sockets[NUM_OF_PLAYERS], char users[
 
 		if(receive_username(user_sockets[connected_users_count], users[connected_users_count]) == FALSE)
 		{
-			unlock_mutex(BROADCAST_MUTEX);
 			close_socket(listen_sock);
+			unlock_mutex(BROADCAST_MUTEX);
 			return FALSE;
 		}
 
@@ -155,39 +106,117 @@ BOOL wait_for_players(int port, SOCKET user_sockets[NUM_OF_PLAYERS], char users[
 		{
 			//todo: write to socke that the username is already exist..
 			write_to_socket(user_sockets[connected_users_count], "Cannot accept connection. Username already exists\n");
-			close_socket(user_sockets[connected_users_count]);
+			close_socket(user_sockets[connected_users_count]);			
 			user_sockets[connected_users_count] = INVALID_SOCKET;
 			memset(users[connected_users_count],'\0', MAX_USER_NAME_LENGTH);
+			unlock_mutex(BROADCAST_MUTEX);
 			continue;
 		}
 
 		if(send_welcome_message(user_sockets[connected_users_count], users[connected_users_count], symbols[connected_users_count]) == FALSE)
 		{
-			unlock_mutex(BROADCAST_MUTEX);
 			close_socket(listen_sock);
+			unlock_mutex(BROADCAST_MUTEX);
 			return FALSE;
 		}
 
 		if(broadcast_new_player_joined(user_sockets, connected_users_count, users[connected_users_count], symbols[connected_users_count]) == FALSE)
 		{
-			unlock_mutex(BROADCAST_MUTEX);
 			close_socket(listen_sock);
+			unlock_mutex(BROADCAST_MUTEX);
 			return FALSE;
 		}
 		
-		unlock_mutex(BROADCAST_MUTEX);
+		players_communications[connected_users_count].socket = user_sockets[connected_users_count];
+		strcpy(players_communications[connected_users_count].username, users[connected_users_count]);
+		players_communications[connected_users_count].symbol = symbols[connected_users_count];
+		memset(players_communications[connected_users_count].message, '\0', MAX_COMMAND_LENGTH);
+		players_communications[connected_users_count].all_users_sockets = user_sockets;
+		players_communications[connected_users_count].all_users = (char**)users;
+
+		players_communication_thread[connected_users_count] = CreateThread(NULL, 0, server_communication_thread_start, &(players_communications[connected_users_count]), 0, NULL);
+		if(players_communication_thread[connected_users_count] == NULL)
+		{
+			printf("Failed to create ServerCommunicationThread for user: %s, ErrorCode: 0x%x\n", users[connected_users_count], GetLastError());
+			write_log("Failed to create ServerCommunicationThread for user: %s, ErrorCode: 0x%x\n", users[connected_users_count], GetLastError());
+			close_socket(listen_sock);
+			unlock_mutex(BROADCAST_MUTEX);
+			return FALSE;
+		}
 
 		connected_users_count++;
+		unlock_mutex(BROADCAST_MUTEX);
 	}
 
 	close_socket(listen_sock);
 	return TRUE;
 }
 
-void close_connections(SOCKET user_sockets[NUM_OF_PLAYERS])
+void write_to_log_order_of_players(SOCKET user_sockets[MAX_NUM_OF_PLAYERS], char users[MAX_NUM_OF_PLAYERS][MAX_USER_NAME_LENGTH], char symbols[MAX_NUM_OF_PLAYERS])
+{
+	int i = 0;
+	write_log("The order of players' in the game is ");
+	for(i = 0; i<MAX_NUM_OF_PLAYERS; i++)
+	{
+		if(user_sockets[i] != INVALID_SOCKET)
+		{
+			if(i > 0)
+				write_log(",");
+			write_log("%s",users[i]);
+		}
+	}
+	write_log(".\n");
+}
+
+BOOL broadcast_players(SOCKET user_sockets[MAX_NUM_OF_PLAYERS], char users[MAX_NUM_OF_PLAYERS][MAX_USER_NAME_LENGTH], char symbols[MAX_NUM_OF_PLAYERS])
+{
+	int i = 0;
+
+	lock_mutex(BROADCAST_MUTEX);
+	for(i = 0; i < MAX_NUM_OF_PLAYERS; i++)
+	{
+		if(user_sockets[i] != INVALID_SOCKET)
+		{
+			if(send_players_to_user(user_sockets[i], user_sockets, users, symbols) == FALSE)
+			{
+				unlock_mutex(BROADCAST_MUTEX);
+				return FALSE;
+			}
+		}
+	}
+	unlock_mutex(BROADCAST_MUTEX);
+	write_log("Players' game pieces' selection broadcasted to all users.");
+	return TRUE;
+}
+
+BOOL send_players_to_user(SOCKET user_sock, SOCKET user_sockets[MAX_NUM_OF_PLAYERS], char users[MAX_NUM_OF_PLAYERS][MAX_USER_NAME_LENGTH], char symbols[MAX_NUM_OF_PLAYERS])
+{
+	char players_message[MAX_PLAYERS_LIST_MESSAGE_LENGTH];
+	char user_symbol[2];
+	int i = 0;
+
+	memset(user_symbol, '\0', 2);
+	memset(players_message, '\0', MAX_PLAYERS_LIST_MESSAGE_LENGTH);
+	for(i = 0; i < MAX_NUM_OF_PLAYERS; i++)
+	{
+		if(user_sockets[i] != INVALID_SOCKET)
+		{
+			user_symbol[0] = symbols[i];
+			if(i > 0)
+				strcat(players_message, ",");
+			strcat(players_message, users[i]);
+			strcat(players_message, "-");
+			strcat(players_message, user_symbol);
+		}
+	}
+	strcat(players_message, ".\n");
+	return write_to_socket(user_sock, players_message);
+}
+
+void close_connections(SOCKET user_sockets[MAX_NUM_OF_PLAYERS])
 {
 	int i =0;
-	for(i = 0; i<NUM_OF_PLAYERS; i++)
+	for(i = 0; i<MAX_NUM_OF_PLAYERS; i++)
 	{
 		if(user_sockets[i] != INVALID_SOCKET)
 		{
@@ -226,17 +255,9 @@ BOOL receive_username(SOCKET user_sock, char username[MAX_USER_NAME_LENGTH])
 BOOL send_welcome_message(SOCKET user_sock, char username[MAX_USER_NAME_LENGTH], char user_symbol)
 {
 	char server_welcome_message[MAX_WELCOME_MESSAGE_LENGTH];
-	char user_symbol_str[2];
-
-	user_symbol_str[0] = user_symbol;
-	user_symbol_str[1] = '\0';
 	
 	memset(server_welcome_message, '\0', MAX_WELCOME_MESSAGE_LENGTH);
-	strcat(server_welcome_message, username);
-	strcat(server_welcome_message, " your game piece is ");
-	strcat(server_welcome_message, user_symbol_str);
-	strcat(server_welcome_message, "\n");
-
+	sprintf(server_welcome_message, "%s your game piece is %c\n", username, user_symbol);
 	write_log(server_welcome_message);
 	if(write_to_socket(user_sock, server_welcome_message) == FALSE)
 	{
@@ -247,22 +268,14 @@ BOOL send_welcome_message(SOCKET user_sock, char username[MAX_USER_NAME_LENGTH],
 	return TRUE;
 }
 
-BOOL broadcast_new_player_joined(SOCKET user_sockets[NUM_OF_PLAYERS], int index_of_new_player, char new_player_username[MAX_USER_NAME_LENGTH], char new_player_symbol)
+BOOL broadcast_new_player_joined(SOCKET user_sockets[MAX_NUM_OF_PLAYERS], int index_of_new_player, char new_player_username[MAX_USER_NAME_LENGTH], char new_player_symbol)
 {
 	char player_joined_message[MAX_PLAYER_JOINED_MESSAGE_LENGTH];
 	char new_player_symbol_str[2];
 	int i = 0;
 
-	new_player_symbol_str[0] = new_player_symbol;
-	new_player_symbol_str[1] = '\0';
-
 	memset(player_joined_message, '\0', MAX_PLAYER_JOINED_MESSAGE_LENGTH);
-	strcat(player_joined_message, "New player joined the game: ");
-	strcat(player_joined_message, new_player_username);
-	strcat(player_joined_message, " ");
-	strcat(player_joined_message, new_player_symbol_str);
-	strcat(player_joined_message, "\n");
-
+	sprintf(player_joined_message, "New player joined the game: %s %c\n", new_player_username, new_player_symbol);
 	write_log(player_joined_message);
 	for(i = 0; i < index_of_new_player; i++)
 	{
@@ -277,7 +290,7 @@ BOOL broadcast_new_player_joined(SOCKET user_sockets[NUM_OF_PLAYERS], int index_
 	return TRUE;
 }
 
-BOOL username_exists(char username[MAX_USER_NAME_LENGTH], char users[NUM_OF_PLAYERS][MAX_USER_NAME_LENGTH], int user_index)
+BOOL username_exists(char username[MAX_USER_NAME_LENGTH], char users[MAX_NUM_OF_PLAYERS][MAX_USER_NAME_LENGTH], int user_index)
 {
 	int i = 0;
 
