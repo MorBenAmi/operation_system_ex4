@@ -90,6 +90,7 @@
     <ClInclude Include="ClientCommunication.h" />
     <ClInclude Include="Engine.h" />
     <ClInclude Include="Events.h" />
+    <ClInclude Include="GameConsts.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="Mutex.h" />
     <ClInclude Include="MutexConstants.h" />
