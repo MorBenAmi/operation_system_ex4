@@ -89,6 +89,12 @@ BOOL receive_from_socket(SOCKET socket, char* buffer)
 	{
 		/* send does not guarantee that the entire message is sent */
 		bytes_just_transferred = recv(socket, cur_place_ptr, 100, 0); //todo change to some constant
+		while(WSAGetLastError() == WSAEWOULDBLOCK) //when the socket is nonblocking: no data available yet
+		{
+			WSASetLastError(0);
+			Sleep(100);
+			bytes_just_transferred = recv(socket, cur_place_ptr, 100, 0);//todo change to some constant
+		}
 		if ( bytes_just_transferred == SOCKET_ERROR ) 
 		{
 			SetLastError(WSAGetLastError());
@@ -101,10 +107,9 @@ BOOL receive_from_socket(SOCKET socket, char* buffer)
 		if (cur_place_ptr[-1] == '\n') {
 			//Received all message
 			cur_place_ptr[-1] = '\0';
-			break;
+			return TRUE;
 		}
 	}
-
 	return TRUE;
 }
 
