@@ -7,14 +7,20 @@ BOOL lock_mutex(char* mutex_name)
 {
 	HANDLE mutex = NULL;
 	DWORD lock_result = 0;
-	DWORD last_error = GetLastError();
+	DWORD process_id = 0;
+	char unique_mutex_name[MAX_MUTEX_LENGTH];
+	DWORD last_error = 0;
 
-	mutex = CreateMutex(NULL, FALSE, (LPCWSTR)mutex_name);
+	last_error = GetLastError();
+
+	process_id = GetCurrentProcessId();
+	memset(unique_mutex_name, '\0', MAX_MUTEX_LENGTH);
+	sprintf(unique_mutex_name, "%d_%s", process_id, mutex_name);
+
+	mutex = CreateMutex(NULL, FALSE, (LPCWSTR)unique_mutex_name);
 	if(mutex == NULL)
 	{
-		printf("failed to get mutex: %s\n",mutex_name);
-		if(strcmp(mutex_name,"LogFile") != 0)
-			write_log("failed to get mutex: %s\n",mutex_name);
+		printf("failed to get mutex: %s\n",unique_mutex_name);
 		return FALSE;
 	}
 	SetLastError(last_error);
@@ -25,7 +31,7 @@ BOOL lock_mutex(char* mutex_name)
 			return TRUE;
 			break;
 	}
-	printf("unable to gain ownership on mutex: %s\n",mutex_name);
+	printf("unable to gain ownership on mutex: %s\n",unique_mutex_name);
 	return FALSE;
 }
 
@@ -33,15 +39,19 @@ BOOL unlock_mutex(char* mutex_name)
 {
 	HANDLE mutex = NULL;
 	DWORD lock_result = 0;
+	DWORD process_id = 0;
+	char unique_mutex_name[MAX_MUTEX_LENGTH];
 	DWORD last_error = 0;
 
+	process_id = GetCurrentProcessId();
+	memset(unique_mutex_name, '\0', MAX_MUTEX_LENGTH);
+	sprintf(unique_mutex_name, "%d_%s", process_id, mutex_name);
+
 	last_error = GetLastError();
-	mutex = CreateMutex(NULL, FALSE, (LPCWSTR)mutex_name);
+	mutex = CreateMutex(NULL, FALSE, (LPCWSTR)unique_mutex_name);
 	if(mutex == NULL)
 	{
-		printf("failed to get mutex: %s, Error code: 0x%x\n",mutex_name, GetLastError());
-		if(strcmp(mutex_name,"LogFile") != 0)
-			write_log("failed to get mutex: %s, Error code: 0x%x\n",mutex_name, GetLastError());
+		printf("failed to get mutex: %s, Error code: 0x%x\n",unique_mutex_name, GetLastError());
 		return FALSE;
 	}
 	SetLastError(last_error);
@@ -53,18 +63,19 @@ void close_mutex(char* mutex_name)
 {
 	HANDLE mutex = NULL;
 	DWORD lock_result = 0;
+	DWORD process_id = 0;
+	char unique_mutex_name[MAX_MUTEX_LENGTH];
 	DWORD last_error = 0;
 
+	process_id = GetCurrentProcessId();
+	memset(unique_mutex_name, '\0', MAX_MUTEX_LENGTH);
+	sprintf(unique_mutex_name, "%d_%s", process_id, mutex_name);
+
 	last_error = GetLastError();
-	mutex = CreateMutex(NULL, FALSE, (LPCWSTR)mutex_name);
+	mutex = CreateMutex(NULL, FALSE, (LPCWSTR)unique_mutex_name);
 	if(mutex == NULL)
 		return;
 	SetLastError(last_error);
 
 	CloseHandle(mutex);
-}
-
-HANDLE open_mutex(char* mutex_name) 
-{
-	return OpenMutex(SYNCHRONIZE, TRUE, (LPCTSTR)mutex_name);
 }

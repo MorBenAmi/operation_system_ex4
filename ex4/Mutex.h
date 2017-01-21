@@ -6,6 +6,8 @@
 #include <windows.h>
 #include "Events.h"
 
+#define MAX_MUTEX_LENGTH 200
+
 BOOL lock_mutex(char* mutex_name);
 
 BOOL unlock_mutex(char* mutex_name);
