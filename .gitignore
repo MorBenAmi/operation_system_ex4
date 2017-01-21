@@ -275,3 +275,4 @@ __pycache__/
 # tools/
 
 ex4/*.filters
+ex4/log_file_server.txt
