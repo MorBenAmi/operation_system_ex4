@@ -19,9 +19,9 @@ typedef struct communication_data
 	SOCKET* all_users_sockets;
 } communication_data;
 
-DWORD WINAPI server_communication_thread_start(LPVOID param);
+DWORD WINAPI ServerCommunicationThreadStart(LPVOID param);
 
-void start_server_communication(communication_data* data);
+void StartServerCommunication(communication_data* data);
 
 void HandleIncomingMessage(communication_data* data);
 
