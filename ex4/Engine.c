@@ -104,8 +104,7 @@ void RunUiThread(data_ui *ui)
 	uiHandle = CreateThread(NULL, 0, RunUiManager, ui, 0, NULL);
 	if(uiHandle == NULL)
 	{
-		printf("Failed to create thread - Error code: 0x%x\n", GetLastError());
-		write_log("Failed to create thread - Error code: 0x%x\n", GetLastError());
+		write_log_and_print("Failed to create thread - Error code: 0x%x\n", GetLastError());
 		return;
 	}
 }
@@ -191,41 +190,52 @@ void HandleBroadcastCommand(char *command, int num_of_args, SOCKET socket)
 void HandlePlayCommand(data_communication *communication, data_ui *ui, game_board *board)
 {
 	int dice_result;
+	char message[MAX_MESSAGE_SIZE];
+	char broadcast_message[MAX_MESSAGE_SIZE];
 	dice_result = (double)rand() / (RAND_MAX + 1) * (MAX_DICE_VALUE - MIN_DICE_VALUE)  
         + MIN_DICE_VALUE;
 	UpdateBoard(board, communication->game_piece, dice_result); 
 	PrintBoard(board);
-	//todo broadcast
 
+	sprintf(message, "Player %c (%s) drew a %d.", 
+		communication->game_piece, communication->username, dice_result);
+	printf("%s", message);
+	
+	sprintf(broadcast_message, "broadcast %s\n", message);
+	SendMessageToServer(communication->socket, broadcast_message);
 	ResetEvent(ui->PlayersTurnEvent);
 }
 
 void HandleServerMessage(data_communication *communication, data_ui *ui, game_board *board)
 {
-	write_log_and_print("Received from server: %s\\n\n", communication->message);
+	write_log("Received from server: %s\\n\n", communication->message);
 
-	//todo need to handle all messages? ie if message from user contains your game piece is
-	if(strcmp(communication->message,"Your turn to play")==0)
-		SetEvent(ui->PlayersTurnEvent);
-	else if (strstr(communication->message, "your game piece is") != NULL)
+	printf("%s\n", communication->message);
+	if (strstr(communication->message, "Private message from") == NULL &&
+		strstr(communication->message, "Broadcast from") == NULL)
 	{
-		//todo doens't suppose to work
-		char *token = NULL;
-		token = strtok(communication->message, "your game piece is"); 
-		strcpy(communication->username, token);
-		token = strtok(NULL, "your game piece is");
-		communication->game_piece = *token;
-	} 
-	else if (strstr(communication->message, "drew a"))
-	{
-		char *token = NULL;
-		char game_piece;
-		int dice_result;
-		game_piece = communication->message[7];  //game piece
-		dice_result = atoi(&(communication->message[strlen(communication->message) - 2]));
+		if(strcmp(communication->message, "Your turn to play.")==0)
+			SetEvent(ui->PlayersTurnEvent);
+		else if (strstr(communication->message, "your game piece is") != NULL)
+		{
+			//todo doens't suppose to work
+			char *token = NULL;
+			token = strtok(communication->message, "your game piece is"); 
+			strcpy(communication->username, token);
+			token = strtok(NULL, "your game piece is");
+			communication->game_piece = *token;
+		} 
+		else if (strstr(communication->message, "drew a"))
+		{
+			char *token = NULL;
+			char game_piece;
+			int dice_result;
+			game_piece = communication->message[7];  //game piece
+			dice_result = atoi(&(communication->message[strlen(communication->message) - 2]));
 
-		UpdateBoard(board, game_piece, dice_result);
-		PrintBoard(board);
+			UpdateBoard(board, game_piece, dice_result);
+			PrintBoard(board);
+		} 
 	}
 	//todo handle all messages from the server (broadcast etc)
 	ReleaseSemaphoreSimple(communication->EngineDoneWithServerMessageSemaphore);
