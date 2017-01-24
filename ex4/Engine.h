@@ -21,9 +21,9 @@ void RunClientCommunicationThread(data_communication *communication);
 
 void RunUiThread(data_ui *ui);
 
-void ReceivedUserMessage(data_communication *communication, data_ui *ui, board *_board);
+void ReceivedUserMessage(data_communication *communication, data_ui *ui, game_board *board);
 
-void HandleServerMessage(data_communication *communication, data_ui *ui, board *_board);
+void HandleServerMessage(data_communication *communication, data_ui *ui, game_board *board);
 
 void ConnectToServer(data_communication *communication);
 
@@ -39,7 +39,7 @@ void HandleMessageCommand(char *command, int num_of_args, SOCKET socket);
 
 void HandleBroadcastCommand(char *command, int num_of_args, SOCKET socket);
 
-void HandlePlayCommand(data_communication *communication, data_ui *ui, board *_board);
+void HandlePlayCommand(data_communication *communication, data_ui *ui, game_board *board);
 
 void RunClient();
 

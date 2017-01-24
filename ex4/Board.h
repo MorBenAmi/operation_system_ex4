@@ -24,14 +24,14 @@ typedef struct cell
 	BOOL players_in_cell[MAX_NUM_OF_PLAYERS];
 }cell;
 
-typedef struct board
+typedef struct game_board
 {
 	cell cells[BOARD_SIZE];
 	int players_location[MAX_NUM_OF_PLAYERS];
-}board;
+}game_board;
 
 void BasicBoardFill(int i, cell *data);
-void BuildBoard(board *_board);
+void BuildBoard(game_board *board);
 void UpdateSnakeHead(cell *curr, int dest);
 void UpdateSnaketail(cell *curr);
 void UpdateLadderHead(cell *curr);
@@ -39,8 +39,8 @@ void UpdateLadderTail(cell *curr, int dest);
 void PrintLineSeperator();
 void PrintCell(cell cur_cell);
 void PrintBoardLine(cell board[], int line);
-void PrintBoard(board *_board);
+void PrintBoard(game_board *board);
 
-void UpdateBoard(board *_board, char game_piece, int dice_result);
+void UpdateBoard(game_board *board, char game_piece, int dice_result);
 
 #endif 

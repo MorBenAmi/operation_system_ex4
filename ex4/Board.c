@@ -115,18 +115,18 @@ void PrintBoardLine(cell board[], int line)
 	PrintLineSeperator();
 }
 
-void PrintBoard(board *_board)
+void PrintBoard(game_board *board)
 {
 	int i;
 	
 	PrintLineSeperator();
 	for(i=9; i>=0; i--)
 	{
-		PrintBoardLine(_board->cells, i);
+		PrintBoardLine(board->cells, i);
 	}
 }
 
-void BuildBoard(board *_board)
+void BuildBoard(game_board *board)
 {
 	int i;
 	int up_ladder[]={14,31,38,84,59,67,81,91};
@@ -134,33 +134,36 @@ void BuildBoard(board *_board)
 	int snake_head[]={17,54,64,62,93,95,87,99};
 	int snake_tail[] = {7,34,60,19,73,75,24,78};
 	for(i=0;i<BOARD_SIZE;i++)
-		BasicBoardFill(i+1, &(_board->cells[i]));
+		BasicBoardFill(i+1, &(board->cells[i]));
 	for(i=0; i<NUM_OF_LADDERS_OR_SNAKES; i++)
 	{
-		UpdateLadderHead(&(_board->cells[up_ladder[i]-1]));
-		UpdateLadderTail(&(_board->cells[bottom_ladder[i]-1]),up_ladder[i]);
-		UpdateSnaketail(&(_board->cells[snake_tail[i]-1]));
-		UpdateSnakeHead(&(_board->cells[snake_head[i]-1]),snake_head[i]);
+		UpdateLadderHead(&(board->cells[up_ladder[i]-1]));
+		UpdateLadderTail(&(board->cells[bottom_ladder[i]-1]),up_ladder[i]);
+		UpdateSnaketail(&(board->cells[snake_tail[i]-1]));
+		UpdateSnakeHead(&(board->cells[snake_head[i]-1]),snake_head[i]);
 	}
 	for (i=0; i<MAX_NUM_OF_PLAYERS; i++)
 	{
-		_board->players_location[i] = 0;
+		board->players_location[i] = -1;
 	}
 }
 
-void UpdateBoard(board *_board, char game_piece, int dice_result) 
+void UpdateBoard(game_board *board, char game_piece, int dice_result) 
 {
 	int location;
 	int player_index;
 	player_index = (int)(strchr(GAME_PIECES, game_piece) - GAME_PIECES);
-	location = _board->players_location[player_index];
-	_board->cells[location].players_in_cell[player_index] = FALSE;
+	location = board->players_location[player_index];
+	board->cells[location].players_in_cell[player_index] = FALSE;
 	location += dice_result;
-	//todo - what happens if location >100?
+	if (location >= BOARD_SIZE)
+	{
+		//game ended
+	}
 	//Get destination cell
-	location = _board->cells[location].destination_cell;
+	location = board->cells[location].destination_cell;
 
 	//Update player location
-	_board->players_location[player_index] = location;
-	_board->cells[location].players_in_cell[player_index] = TRUE;
+	board->players_location[player_index] = location;
+	board->cells[location].players_in_cell[player_index] = TRUE;
 }

@@ -5,7 +5,7 @@ void RunClient(int port, char *username)
 {
 	HANDLE mutexes[2]={NULL};
 	DWORD lock_result;
-	board _board;
+	game_board board;
 	data_ui ui;
 	data_communication communication;
 	communication.port = port;
@@ -22,10 +22,11 @@ void RunClient(int port, char *username)
 	{ 
 		printf("ERROR\n\n");
 	}
+	
 	//init random
 	srand(time(NULL));
 
-	BuildBoard(&_board);
+	BuildBoard(&board);
 
 	while (1) 
 	{
@@ -33,10 +34,10 @@ void RunClient(int port, char *username)
 		switch (lock_result)
 		{
 			case WAIT_OBJECT_0:				
-				ReceivedUserMessage(&communication, &ui, &_board);
+				ReceivedUserMessage(&communication, &ui, &board);
 				break;
 			case WAIT_OBJECT_0 + 1:
-				HandleServerMessage(&communication, &ui, &_board);
+				HandleServerMessage(&communication, &ui, &board);
 				break;
 			default:
 				printf("result: 0x%x\n", GetLastError());
@@ -110,7 +111,7 @@ void RunUiThread(data_ui *ui)
 	}
 }
 
-void ReceivedUserMessage(data_communication *communication, data_ui *ui, board *_board)
+void ReceivedUserMessage(data_communication *communication, data_ui *ui, game_board *board)
 {
 	DWORD return_value;
 	//todo split to functions
@@ -135,7 +136,7 @@ void ReceivedUserMessage(data_communication *communication, data_ui *ui, board *
 	}
 	else if(strcmp(ui->command, "playy")==0)
 	{
-		HandlePlayCommand(communication, ui, _board);
+		HandlePlayCommand(communication, ui, board);
 	}
 	else if (strcmp(ui->command, "players")==0)
 	{	
@@ -151,7 +152,7 @@ void ReceivedUserMessage(data_communication *communication, data_ui *ui, board *
 void HandleMessageCommand(char *command, int num_of_args, SOCKET socket)
 {
 	char *token;
-	if(num_of_args!=3)
+	if(num_of_args<3)
 	{
 		write_log_and_print("Illegal argument for command %s. Command format is %s <user> <message>\n",token, token);
 		return;
@@ -174,9 +175,9 @@ void HandleMessageCommand(char *command, int num_of_args, SOCKET socket)
 void HandleBroadcastCommand(char *command, int num_of_args, SOCKET socket)
 {
 	char *token;
-	if(num_of_args!=2)
+	if(num_of_args<2)
 	{
-		write_log_and_print("Illegal argument for command %s. Command format is %s <message>\n",token, token);
+		write_log_and_print("Illegal argument for command %s. Command format is %s <message>\n", token, token);
 		return;
 	}
 	token = strtok(NULL, "\n");
@@ -188,31 +189,50 @@ void HandleBroadcastCommand(char *command, int num_of_args, SOCKET socket)
 	SendMessageToServer(socket, command);
 }
 
-void HandlePlayCommand(data_communication *communication, data_ui *ui, board *_board)
+void HandlePlayCommand(data_communication *communication, data_ui *ui, game_board *board)
 {
 	int dice_result;
 	dice_result = (double)rand() / (RAND_MAX + 1) * (MAX_DICE_VALUE - MIN_DICE_VALUE)  
         + MIN_DICE_VALUE;
-	UpdateBoard(_board, communication->game_piece, dice_result); 
-	PrintBoard(_board);
+	UpdateBoard(board, communication->game_piece, dice_result); 
+	PrintBoard(board);
 	//to do rand() print message and broadcast
 
 	ResetEvent(ui->PlayersTurnEvent);
 }
 
-void HandleServerMessage(data_communication *communication, data_ui *ui, board *_board)
+void HandleServerMessage(data_communication *communication, data_ui *ui, game_board *board)
 {
 	write_log_and_print("Received from server: %s\\n\n", communication->message);
 
+	//todo need to handle all messages? ie if message from user contains your game piece is
 	if(strcmp(communication->message,"Your turn to play")==0)
 		SetEvent(ui->PlayersTurnEvent);
 	else if (strstr(communication->message, "your game piece is") != NULL)
 	{
 		char *token = NULL;
-		token = strtok(communication->message, "your game piece is");
+		token = strtok(communication->message, "your game piece is"); //todo doens't suppose to work
 		strcpy(communication->username, token);
 		token = strtok(NULL, "your game piece is");
 		communication->game_piece = *token;
+	} 
+	else if (strstr(communication->message, "drew a"))
+	{
+		char *token = NULL;
+		char game_piece;
+		token = strtok(communication->message, " ");
+		
+		token = strtok(communication->message, " ");
+		token = strtok(NULL, " "); 
+		printf("tet: %s\n", token);
+		game_piece = *token;  //game piece
+		token = strtok(NULL, " ");
+		token = strtok(NULL, " ");
+		token = strtok(NULL, " ");
+		token = strtok(NULL, " ");
+
+		UpdateBoard(board, game_piece, (*token - '0'));
+		PrintBoard(board);
 	}
 	//todo handle all messages from the server (broadcast etc)
 	ReleaseSemaphoreSimple(communication->EngineDoneWithServerMessageSemaphore);
