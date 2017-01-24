@@ -1,9 +1,7 @@
-#include "SocketWrapper.h"
 #include "ClientCommunication.h"
-#include "Mutex.h"
-#include "Semaphore.h"
 
-DWORD WINAPI runClientCommunicatrion(LPVOID lpParam)
+
+DWORD WINAPI RunClientCommunication(LPVOID lpParam)
 {
 	data_communication *communication = (data_communication *) lpParam;
 	while (1) 
@@ -12,7 +10,7 @@ DWORD WINAPI runClientCommunicatrion(LPVOID lpParam)
 		memset(communication->message, '\0', MAX_COMMAND_SIZE);
 		if (receive_from_socket(communication->socket, communication->message)) 
 		{
-			release_semaphore(communication->IncomingMessageFromServerSemaphore);
+			ReleaseSemaphoreSimple(communication->IncomingMessageFromServerSemaphore);
 			WaitForSingleObject(communication->EngineDoneWithServerMessageSemaphore, INFINITE);
 		}
 		else 

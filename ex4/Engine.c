@@ -1,33 +1,7 @@
-/*Limor Mendelzburg 308081389
-Mor Ben Ami 203607536
-Exercise 3*/
-#include <stdio.h>
-#include <stdlib.h>
-#include "SocketWrapper.h"
-#include <windows.h>
 #include "Engine.h"
-#include "UiManager.h"
-#include "ClientCommunication.h"
-#include "Log.h"
-#include "Mutex.h"
-#include "Semaphore.h"
-
-void runClientCommunicationThread(data_communication *communication);
-
-void runUiThread(data_ui *ui);
-
-void receivedUserMessage(data_ui *ui);
-
-void handleUserCommand(char *command);
-
-void handleServerMessage(data_communication *communication);
-
-void connectToServer(data_communication *communication);
-
-BOOL sendMessageToServer(SOCKET socket, char *message);
 
 /*oOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoO*/
-void runClient(int port, char *username)
+void RunClient(int port, char *username)
 {
 	HANDLE mutexes[2]={NULL};
 	DWORD lock_result;
@@ -37,10 +11,10 @@ void runClient(int port, char *username)
 	communication.port = port;
 	communication.username = username;
 	
-	connectToServer(&communication);
+	ConnectToServer(&communication);
 	
-	runUiThread(&ui);
-	runClientCommunicationThread(&communication);
+	RunUiThread(&ui);
+	RunClientCommunicationThread(&communication);
 	mutexes[0] = ui.UserEnteredTextSemaphore;
 	mutexes[1] = communication.IncomingMessageFromServerSemaphore;
 
@@ -55,10 +29,10 @@ void runClient(int port, char *username)
 		switch (lock_result)
 		{
 			case WAIT_OBJECT_0:				
-				receivedUserMessage(&ui);
+				ReceivedUserMessage(&ui);
 				break;
 			case WAIT_OBJECT_0 + 1:
-				handleServerMessage(&communication);
+				HandleServerMessage(&communication, &ui);
 				break;
 			default:
 				printf("result: 0x%x\n", GetLastError());
@@ -71,19 +45,19 @@ void runClient(int port, char *username)
 	getchar();
 }
 
-void connectToServer(data_communication *communication) 
+void ConnectToServer(data_communication *communication) 
 {
-	char username_message[256];
+	char username_message[SIZE_OF_USERNAME_MESSAGE];
 	if (connect_socket(communication->port, &communication->socket) == TRUE) 
 	{
 		write_log_and_print("Connected to server on port %d\n", communication->port);
 		
-		memset(username_message, '\0', 256);
+		memset(username_message, '\0', SIZE_OF_USERNAME_MESSAGE);
 		strcat(username_message, "username=");
 		strcat(username_message, communication->username);
 		printf("sending %s\\n\n", username_message);
 
-		if (sendMessageToServer(communication->socket, username_message) == FALSE ) 
+		if (SendMessageToServer(communication->socket, username_message) == FALSE ) 
 		{
 			printf("Socket error while trying to write data to socket\n");
 			//todo error
@@ -96,16 +70,16 @@ void connectToServer(data_communication *communication)
 	}
 }
 
-void runClientCommunicationThread(data_communication *communication) 
+void RunClientCommunicationThread(data_communication *communication) 
 {
 	HANDLE clientCommunicationHandle = NULL;
 
 	communication->IncomingMessageFromServerSemaphore = 
-		create_semaphore("IncomingMessageFromServerSemaphore");
+		CreateSemaphoreSimple("IncomingMessageFromServerSemaphore");
 	communication->EngineDoneWithServerMessageSemaphore = 
-		create_semaphore("EngineDoneWithServerMessageSemaphore");
+		CreateSemaphoreSimple("EngineDoneWithServerMessageSemaphore");
 	//todo check if semaphore creation failed
-	clientCommunicationHandle = CreateThread(NULL, 0, runClientCommunicatrion, communication, 0, NULL);
+	clientCommunicationHandle = CreateThread(NULL, 0, RunClientCommunication, communication, 0, NULL);
 	if(clientCommunicationHandle == NULL)
 	{
 		printf("Failed to create thread - Error code: 0x%x\n", GetLastError());
@@ -114,16 +88,16 @@ void runClientCommunicationThread(data_communication *communication)
 	}
 }
 
-void runUiThread(data_ui *ui) 
+void RunUiThread(data_ui *ui) 
 {
 	HANDLE uiHandle = NULL;
 
 	ui->UserEnteredTextSemaphore = 
-		create_semaphore("UserEnteredTextSemaphore");
+		CreateSemaphoreSimple("UserEnteredTextSemaphore");
 	ui->EngineDoneWithUserMessageSemaphore = 
-		create_semaphore("EngineDoneWithUserMessageSemaphore");
+		CreateSemaphoreSimple("EngineDoneWithUserMessageSemaphore");
 	//todo check if semaphore creation failed
-	uiHandle = CreateThread(NULL, 0, runUiManager, ui, 0, NULL);
+	uiHandle = CreateThread(NULL, 0, RunUiManager, ui, 0, NULL);
 	if(uiHandle == NULL)
 	{
 		printf("Failed to create thread - Error code: 0x%x\n", GetLastError());
@@ -132,41 +106,133 @@ void runUiThread(data_ui *ui)
 	}
 }
 
-void receivedUserMessage(data_ui *ui)
+void ReceivedUserMessage(data_ui *ui)
 {
+	DWORD return_value;
 	printf("Recieved: %s\n", ui->command);
 	Sleep(1000); //todo remove - only for debug
-	handleUserCommand(ui->command);
+	HandleUserCommand(ui->command);
+	if(strcmp(ui->command,"play")==0)
+	{
+		return_value = WaitForSingleObject(ui->PlayersTurnEvent, 0);
+		if (return_value == WAIT_TIMEOUT)
+			ReleaseSemaphoreSimple(ui->EngineDoneWithUserMessageSemaphore);///check if correct
+		else
+		{
+			//to do rand() print message and broadcast
+
+			ResetEvent(ui->PlayersTurnEvent);
+			ReleaseSemaphoreSimple(ui->EngineDoneWithUserMessageSemaphore);///check if 
+		}
+
+	}
 	//if play SetEvent(ui->PlayersTurnEvent);
-	release_semaphore(ui->EngineDoneWithUserMessageSemaphore);
 }
 
-void handleUserCommand(char *command)
+void HandleUserCommand(char *command)
 {
 	//todo validate and handle message
 	//if ilegal arg
-	write_log_and_print("Illegal argument for command %s. Command format is %s bla", 
-		command, command);
-
-	//if not
-	write_log_and_print("Command %s is not recognized. Possible commands are:players, message, broadcast and play", 
-		command);
-
+	char *token=NULL;
+	int num_of_arg_in_command;
+	num_of_arg_in_command = NumOfArgInCommand(command);//returns zero if there are no spaces - one word
+	token = strtok(command, " ");
+	if(num_of_arg_in_command!=0) //two words
+	{
+		if(strcmp(token, "message")==0)
+		{
+			if(num_of_arg_in_command!=3)
+				write_log_and_print("Illegal argument for command %s. Command format is %s <user> <message>",token, token);
+			token = strtok(NULL, " ");
+			if(CheckIfUserNameValid(token)==FALSE)
+				write_log_and_print("Illegal username");
+			token = strtok(NULL, " ");
+			if(CheckIfMessageValid(token)==FALSE)
+				write_log_and_print("Illegal message");
+		}
+		else if(strcmp(token, "broadcast")==0)
+		{
+			if(num_of_arg_in_command!=2)
+				write_log_and_print("Illegal argument for command %s. Command format is %s <message>",token, token);
+			token = strtok(NULL, " ");
+			if(CheckIfMessageValid(token)==FALSE)
+				write_log_and_print("Illegal message");
+		}
+		else if(strcmp(token, "play")==0)
+				write_log_and_print("Illegal argument for command %s. Command format is %s",token, token);
+		else if(strcmp(token, "players")==0)
+				write_log_and_print("Illegal argument for command %s. Command format is %s",token, token);
+	}
+	else if(strcmp(command, "play")!=0 && strcmp(command, "players")!=0)
+	{
+		token = command;	
+		write_log_and_print("Command %s is not recognized. Possible commands are:players, message, broadcast and play", 
+		token);
+	}
 	// if Game ended: close_socket(); 
 }
 
-void handleServerMessage(data_communication *communication)
+void HandleServerMessage(data_communication *communication,data_ui *ui)
 {
 	write_log_and_print("Received from server: %s\\n\n", communication->message);
 	Sleep(1000); //todo remove - only for debug
-	//if "your play to turn" reset - PlayersTurnEvent
-	release_semaphore(communication->EngineDoneWithServerMessageSemaphore);
+	if(strcmp(communication->message,"Your turn to play")==0)
+		SetEvent(ui->PlayersTurnEvent);
+	ReleaseSemaphoreSimple(communication->EngineDoneWithServerMessageSemaphore);
 }
 
-BOOL sendMessageToServer(SOCKET socket, char *message)
+BOOL SendMessageToServer(SOCKET socket, char *message)
 {
 	write_log("Send to server:%s\\n\n", message);
 	//todo: tal, i think it's better to add the \n from outside..because strcat does not validate that you have anough space for appending this \n in message
 	strcat(message, "\n");
 	return write_to_socket(socket, message); 
+}
+
+BOOL CheckIfMessageValid(char *message)
+{
+	int length,i;
+	length = strlen(message); //returns not including \0
+	if(length>80)
+		return FALSE;
+	else
+	{
+		for(i=0;i<length;i++)
+		{
+			if(message[i]!=' ' && message[i]!='.' && message[i]!=',' && isdigit(message[i])==0 && isalpha(message[i])==0)
+				return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+BOOL CheckIfUserNameValid(char *user_name)
+{
+	int length,i;
+	length = strlen(user_name); //returns not including \0
+	if(length>SIZE_OF_USERNAME)
+		return FALSE;
+	else
+	{
+		for(i=0;i<length;i++)
+		{
+			if(isdigit(user_name[i])==0 && isalpha(user_name[i])==0)
+				return FALSE;
+		}
+	}
+	return TRUE;
+}
+int NumOfArgInCommand(char *command)
+{
+	char *token=NULL;
+	int counter=0;
+   /* get the first token */
+   token = strtok(command, " ");
+   /* walk through other tokens */
+   while( token != NULL ) 
+   {
+      counter++;
+      token = strtok(NULL, " ");
+   }
+   return counter;
 }

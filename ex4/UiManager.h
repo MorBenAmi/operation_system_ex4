@@ -4,7 +4,7 @@
 
 #define MAX_COMMAND_SIZE 1000 //TODO search for the max sizes
 
-DWORD WINAPI runUiManager(LPVOID lpParam);
+DWORD WINAPI RunUiManager(LPVOID lpParam);
 
 typedef struct data_ui
 {

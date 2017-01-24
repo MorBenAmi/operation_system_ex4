@@ -3,27 +3,27 @@
 #include "Semaphore.h"
 #include "Events.h"
 #define PLAY "play"
-void readFromClient(char *command);
+void ReadFromClient(char *command);
 
-DWORD WINAPI runUiManager(LPVOID lpParam)
+DWORD WINAPI RunUiManager(LPVOID lpParam)
 {
 	data_ui *data = (data_ui *)lpParam;
 	InitEvent(&data->PlayersTurnEvent, "PlayersTurnEvent");
 	while (1) 
 	{
-		readFromClient(data->command);
+		ReadFromClient(data->command);
 		if (strcmp(data->command, PLAY) == 0)
 		{
 			WaitForSingleObject(data->PlayersTurnEvent, INFINITE);
 		}
-		release_semaphore(data->UserEnteredTextSemaphore);
+		ReleaseSemaphoreSimple(data->UserEnteredTextSemaphore);
 		WaitForSingleObject(data->EngineDoneWithUserMessageSemaphore, INFINITE);
 	}
 	
 	return GetLastError();
 }
 
-void readFromClient(char *command) 
+void ReadFromClient(char *command) 
 {
 	int index = 0;
 	char current_char;

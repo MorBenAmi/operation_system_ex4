@@ -2,8 +2,8 @@
 #define SEMAPHORE_HEADER
 #include <windows.h>
 
-HANDLE create_semaphore(char* name);
+HANDLE CreateSemaphoreSimple(char* name);
 
-void release_semaphore(HANDLE semaphore);
+void ReleaseSemaphoreSimple(HANDLE semaphore);
 
 #endif

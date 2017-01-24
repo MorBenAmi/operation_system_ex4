@@ -75,6 +75,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Board.c" />
     <ClCompile Include="ClientCommunication.c" />
     <ClCompile Include="Events.c" />
     <ClCompile Include="Log.c" />
@@ -88,6 +89,7 @@
     <ClCompile Include="SocketWrapper.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Board.h" />
     <ClInclude Include="ClientCommunication.h" />
     <ClInclude Include="Engine.h" />
     <ClInclude Include="Events.h" />

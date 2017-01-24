@@ -1,9 +1,11 @@
 #ifndef CLIENT_COMMUNICATION_HEADER
 #define CLIENT_COMMUNICATION_HEADER
+#include "SocketWrapper.h"
 #include <Windows.h>
+#include "Mutex.h"
+#include "Semaphore.h"
 
-#define MAX_COMMAND_SIZE 1000 //TODO search for the max sizes
-DWORD WINAPI runClientCommunicatrion(LPVOID lpParam);
+#define MAX_COMMAND_SIZE 80 //TODO search for the max sizes
 
 typedef struct data_communication
 {
@@ -14,5 +16,6 @@ typedef struct data_communication
 	char *username;
 	int port;
 } data_communication;
+DWORD WINAPI RunClientCommunication(LPVOID lpParam);
 
 #endif
