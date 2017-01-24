@@ -33,7 +33,7 @@ void RunClient(int port, char *username)
 		switch (lock_result)
 		{
 			case WAIT_OBJECT_0:				
-				ReceivedUserMessage(&ui, &_board);
+				ReceivedUserMessage(&communication, &ui, &_board);
 				break;
 			case WAIT_OBJECT_0 + 1:
 				HandleServerMessage(&communication, &ui, &_board);
@@ -212,6 +212,8 @@ BOOL SendMessageToServer(SOCKET socket, char *message)
 BOOL CheckIfMessageValid(char *message)
 {
 	int length,i;
+	if (message == NULL)
+		return FALSE;
 	length = strlen(message); //returns not including \0
 	if(length>80)
 		return FALSE;
@@ -246,13 +248,15 @@ int NumOfArgInCommand(char *command)
 {
 	char *token=NULL;
 	int counter=0;
-   /* get the first token */
-   token = strtok(command, " ");
-   /* walk through other tokens */
-   while( token != NULL ) 
-   {
-      counter++;
-      token = strtok(NULL, " ");
-   }
-   return counter;
+	char command_copy[MAX_COMMAND_LENGTH];
+    /* get the first token */
+	strcpy(command_copy, command);
+    token = strtok(command_copy, " ");
+    /* walk through other tokens */
+    while( token != NULL ) 
+    {
+		counter++;
+		token = strtok(NULL, " ");
+	}
+	return counter;
 }

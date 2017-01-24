@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include "SocketWrapper.h"
 #include <windows.h>
 #include "UiManager.h"
@@ -13,13 +14,14 @@
 #include "GameConsts.h"
 #include "Board.h"
 
+#define MIN_DICE_VALUE 1
+#define MAX_DICE_VALUE 6
+
 void RunClientCommunicationThread(data_communication *communication);
 
 void RunUiThread(data_ui *ui);
 
-void ReceivedUserMessage(data_ui *ui, board *_board);
-
-void HandleUserCommand(char *command);
+void ReceivedUserMessage(data_communication *communication, data_ui *ui, board *_board);
 
 void HandleServerMessage(data_communication *communication, data_ui *ui, board *_board);
 
