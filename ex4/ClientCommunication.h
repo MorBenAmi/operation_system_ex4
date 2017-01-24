@@ -14,6 +14,7 @@ typedef struct data_communication
 	SOCKET socket;
 	char message[MAX_COMMAND_SIZE];
 	char *username;
+	char game_piece;
 	int port;
 } data_communication;
 DWORD WINAPI RunClientCommunication(LPVOID lpParam);

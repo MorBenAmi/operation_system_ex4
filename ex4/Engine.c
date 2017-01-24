@@ -109,80 +109,93 @@ void RunUiThread(data_ui *ui)
 	}
 }
 
-void ReceivedUserMessage(data_ui *ui, board *_board)
+void ReceivedUserMessage(data_communication *communication, data_ui *ui, board *_board)
 {
 	DWORD return_value;
-	Sleep(1000); //todo remove - only for debug
-	HandleUserCommand(ui->command);
-	if(strcmp(ui->command,"play")==0)
-	{
-		return_value = WaitForSingleObject(ui->PlayersTurnEvent, 0);
-		if (return_value == WAIT_TIMEOUT)
-		{
-
-		}
-		else
-		{
-			//to do rand() print message and broadcast
-
-			ResetEvent(ui->PlayersTurnEvent);
-		}
-	}
-	ReleaseSemaphoreSimple(ui->EngineDoneWithUserMessageSemaphore);///check if 
-}
-
-void HandleUserCommand(char *command)
-{
-	//todo validate and handle message
-	//if ilegal arg
+	//todo split to functions
 	char *token=NULL;
 	int num_of_arg_in_command;
-	num_of_arg_in_command = NumOfArgInCommand(command);//returns zero if there are no spaces - one word
-	token = strtok(command, " ");
-	if(num_of_arg_in_command!=0) //two words
+	char command_copy[MAX_COMMAND_LENGTH];
+	strcpy(command_copy, ui->command);
+	num_of_arg_in_command = NumOfArgInCommand(command_copy);//returns zero if there are no spaces - one word
+	token = strtok(command_copy, " ");
+	if(num_of_arg_in_command>1) //two words
 	{
 		if(strcmp(token, "message")==0)
 		{
 			if(num_of_arg_in_command!=3)
 			{
-				write_log_and_print("Illegal argument for command %s. Command format is %s <user> <message>",token, token);
+				write_log_and_print("Illegal argument for command %s. Command format is %s <user> <message>\n",token, token);
 				return;
 			}
 			token = strtok(NULL, " ");
 			if(CheckIfUserNameValid(token)==FALSE)
-				write_log_and_print("Illegal username");
+			{
+				write_log_and_print("Illegal username\n");
+				return;
+			}
 			token = strtok(NULL, " ");
 			if(CheckIfMessageValid(token)==FALSE)
-				write_log_and_print("Illegal message");
+			{
+				write_log_and_print("Illegal message\n");
+				return;
+			}
+			SendMessageToServer(communication->socket, ui->command);
 		}
 		else if(strcmp(token, "broadcast")==0)
 		{
 			if(num_of_arg_in_command!=2)
-				write_log_and_print("Illegal argument for command %s. Command format is %s <message>",token, token);
-			token = strtok(NULL, " ");
+			{
+				write_log_and_print("Illegal argument for command %s. Command format is %s <message>\n",token, token);
+				return;
+			}
+			token = strtok(NULL, "\n");
 			if(CheckIfMessageValid(token)==FALSE)
+			{
 				write_log_and_print("Illegal message");
+				return;
+			}
+			SendMessageToServer(communication->socket, ui->command);
 		}
-		else if(strcmp(token, "play")==0)
-				write_log_and_print("Illegal argument for command %s. Command format is %s",token, token);
-		else if(strcmp(token, "players")==0)
-				write_log_and_print("Illegal argument for command %s. Command format is %s",token, token);
+		else if(strcmp(token, "play")==0 || strcmp(token, "players")==0) 
+			write_log_and_print("Illegal argument for command %s. Command format is %s\n",token, token);
 	}
-	else if(strcmp(command, "play")!=0 && strcmp(command, "players")!=0)
+	else if(strcmp(ui->command, "playy")==0)
 	{
-		token = command;	
-		write_log_and_print("Command %s is not recognized. Possible commands are:players, message, broadcast and play", 
-		token);
+		int dice_result;
+		dice_result = (double)rand() / (RAND_MAX + 1) * (MAX_DICE_VALUE - MIN_DICE_VALUE)  
+            + MIN_DICE_VALUE;
+		UpdateBoard(_board, communication->game_piece, dice_result); 
+		PrintBoard(_board);
+		//to do rand() print message and broadcast
+
+		ResetEvent(ui->PlayersTurnEvent);
 	}
+	else if (strcmp(ui->command, "players")==0)
+	{	
+		SendMessageToServer(communication->socket, ui->command);
+	}
+	else
+		write_log_and_print("Command %s is not recognized. Possible commands are:players, message, broadcast and play\n", 
+		ui->command);
 	// if Game ended: close_socket(); 
+	ReleaseSemaphoreSimple(ui->EngineDoneWithUserMessageSemaphore);///check if 
 }
 
 void HandleServerMessage(data_communication *communication, data_ui *ui, board *_board)
 {
 	write_log_and_print("Received from server: %s\\n\n", communication->message);
-	Sleep(1000); //todo remove - only for debug
+
 	if(strcmp(communication->message,"Your turn to play")==0)
 		SetEvent(ui->PlayersTurnEvent);
+	else if (strstr(communication->message, "your game piece is") != NULL)
+	{
+		char *token = NULL;
+		token = strtok(communication->message, "your game piece is");
+		strcpy(communication->username, token);
+		token = strtok(NULL, "your game piece is");
+		communication->game_piece = *token;
+	}
 	//todo handle all messages from the server (broadcast etc)
 	ReleaseSemaphoreSimple(communication->EngineDoneWithServerMessageSemaphore);
 }
