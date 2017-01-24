@@ -60,7 +60,7 @@ void ConnectToServer(data_communication *communication)
 		memset(username_message, '\0', MAX_SIZE_OF_USERNAME_MESSAGE);
 		strcat(username_message, "username=");
 		strcat(username_message, communication->username);
-		printf("sending %s\\n\n", username_message);
+		strcat(username_message, "\n");
 
 		if (SendMessageToServer(communication->socket, username_message) == FALSE ) 
 		{
@@ -233,9 +233,7 @@ void HandleServerMessage(data_communication *communication, data_ui *ui, game_bo
 
 BOOL SendMessageToServer(SOCKET socket, char *message)
 {
-	write_log("Send to server:%s\\n\n", message);
-	//todo: tal, i think it's better to add the \n from outside..because strcat does not validate that you have anough space for appending this \n in message
-	strcat(message, "\n");
+	write_log("Send to server:%s", message);
 	return write_to_socket(socket, message); 
 }
 

@@ -106,7 +106,6 @@ BOOL receive_from_socket(SOCKET socket, char* buffer)
 		cur_place_ptr += bytes_just_transferred; // <ISP> pointer arithmetic
 		if (cur_place_ptr[-1] == '\n') {
 			//Received all message
-			cur_place_ptr[-1] = '\0';
 			return TRUE;
 		}
 	}
