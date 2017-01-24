@@ -7,15 +7,13 @@ BOOL lock_mutex(char* mutex_name)
 {
 	HANDLE mutex = NULL;
 	DWORD lock_result = 0;
-	DWORD process_id = 0;
 	char unique_mutex_name[MAX_MUTEX_LENGTH];
 	DWORD last_error = 0;
 
 	last_error = GetLastError();
 
-	process_id = GetCurrentProcessId();
 	memset(unique_mutex_name, '\0', MAX_MUTEX_LENGTH);
-	sprintf(unique_mutex_name, "%d_%s", process_id, mutex_name);
+	sprintf(unique_mutex_name, "%d_%s", GetCurrentProcessId(), mutex_name);
 
 	mutex = CreateMutex(NULL, FALSE, (LPCWSTR)unique_mutex_name);
 	if(mutex == NULL)
@@ -39,13 +37,11 @@ BOOL unlock_mutex(char* mutex_name)
 {
 	HANDLE mutex = NULL;
 	DWORD lock_result = 0;
-	DWORD process_id = 0;
 	char unique_mutex_name[MAX_MUTEX_LENGTH];
 	DWORD last_error = 0;
 
-	process_id = GetCurrentProcessId();
 	memset(unique_mutex_name, '\0', MAX_MUTEX_LENGTH);
-	sprintf(unique_mutex_name, "%d_%s", process_id, mutex_name);
+	sprintf(unique_mutex_name, "%d_%s", GetCurrentProcessId(), mutex_name);
 
 	last_error = GetLastError();
 	mutex = CreateMutex(NULL, FALSE, (LPCWSTR)unique_mutex_name);
@@ -63,13 +59,11 @@ void close_mutex(char* mutex_name)
 {
 	HANDLE mutex = NULL;
 	DWORD lock_result = 0;
-	DWORD process_id = 0;
 	char unique_mutex_name[MAX_MUTEX_LENGTH];
 	DWORD last_error = 0;
 
-	process_id = GetCurrentProcessId();
 	memset(unique_mutex_name, '\0', MAX_MUTEX_LENGTH);
-	sprintf(unique_mutex_name, "%d_%s", process_id, mutex_name);
+	sprintf(unique_mutex_name, "%d_%s", GetCurrentProcessId(), mutex_name);
 
 	last_error = GetLastError();
 	mutex = CreateMutex(NULL, FALSE, (LPCWSTR)unique_mutex_name);
