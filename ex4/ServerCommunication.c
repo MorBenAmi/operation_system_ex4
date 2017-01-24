@@ -15,8 +15,7 @@ void StartServerCommunication(communication_data* data)
 		memset(data->message, '\0', MAX_COMMAND_LENGTH);
 		if(receive_from_socket(data->socket, data->message) == FALSE)
 		{
-			printf("Error while receiving message from user: %s, ErrorCode: 0x%x\n", data->username, GetLastError());
-			write_log("Error while receiving message from user: %s, ErrorCode: 0x%x\n", data->username, GetLastError());
+			write_log_and_print("Error while receiving message from user: %s, ErrorCode: 0x%x\n", data->username, GetLastError());
 			return;
 		}
 

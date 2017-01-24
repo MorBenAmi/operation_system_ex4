@@ -87,8 +87,7 @@ void RunClientCommunicationThread(data_communication *communication)
 	clientCommunicationHandle = CreateThread(NULL, 0, RunClientCommunication, communication, 0, NULL);
 	if(clientCommunicationHandle == NULL)
 	{
-		printf("Failed to create thread - Error code: 0x%x\n", GetLastError());
-		write_log("Failed to create thread - Error code: 0x%x\n", GetLastError());
+		write_log_and_print("Failed to create thread - Error code: 0x%x\n", GetLastError());
 		return;
 	}
 }
@@ -196,7 +195,7 @@ void HandlePlayCommand(data_communication *communication, data_ui *ui, game_boar
         + MIN_DICE_VALUE;
 	UpdateBoard(board, communication->game_piece, dice_result); 
 	PrintBoard(board);
-	//to do rand() print message and broadcast
+	//todo broadcast
 
 	ResetEvent(ui->PlayersTurnEvent);
 }
@@ -210,8 +209,9 @@ void HandleServerMessage(data_communication *communication, data_ui *ui, game_bo
 		SetEvent(ui->PlayersTurnEvent);
 	else if (strstr(communication->message, "your game piece is") != NULL)
 	{
+		//todo doens't suppose to work
 		char *token = NULL;
-		token = strtok(communication->message, "your game piece is"); //todo doens't suppose to work
+		token = strtok(communication->message, "your game piece is"); 
 		strcpy(communication->username, token);
 		token = strtok(NULL, "your game piece is");
 		communication->game_piece = *token;
@@ -220,18 +220,11 @@ void HandleServerMessage(data_communication *communication, data_ui *ui, game_bo
 	{
 		char *token = NULL;
 		char game_piece;
-		token = strtok(communication->message, " ");
-		
-		token = strtok(communication->message, " ");
-		token = strtok(NULL, " "); 
-		printf("tet: %s\n", token);
-		game_piece = *token;  //game piece
-		token = strtok(NULL, " ");
-		token = strtok(NULL, " ");
-		token = strtok(NULL, " ");
-		token = strtok(NULL, " ");
+		int dice_result;
+		game_piece = communication->message[7];  //game piece
+		dice_result = atoi(&(communication->message[strlen(communication->message) - 2]));
 
-		UpdateBoard(board, game_piece, (*token - '0'));
+		UpdateBoard(board, game_piece, dice_result);
 		PrintBoard(board);
 	}
 	//todo handle all messages from the server (broadcast etc)
