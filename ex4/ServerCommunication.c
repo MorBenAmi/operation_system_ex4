@@ -69,7 +69,7 @@ BOOL HandleSendMessage(communication_data* data)
 
 	command_name = strtok(data->message, " ");
 	username = strtok(NULL, " ");
-	message = strtok(NULL, "");
+	message = strtok(NULL, "\n");
 
 	for(i = 0; i < MAX_NUM_OF_PLAYERS; i++)
 	{
@@ -103,7 +103,7 @@ BOOL HandleBroadcastMessage(communication_data* data)
 	char user_not_exist_message[MAX_USER_NOT_EXIST_MESSAGE_LENGTH];
 
 	command_name = strtok(data->message, " ");
-	message = strtok(NULL, "");
+	message = strtok(NULL, "\n");
 
 	memset(broadcast_message, '\0', MAX_PRIVATE_MESSAGE_LENGTH);
 	sprintf(broadcast_message, "Broadcast from %s: %s\n", data->username, message);

@@ -236,7 +236,7 @@ BOOL ReceiveUsername(SOCKET user_sock, char username[MAX_USER_NAME_LENGTH])
 	}
 
 	username_prefix = strtok(username_message, "=");
-	username_suffix = strtok(NULL, "=");
+	username_suffix = strtok(NULL, "\n");
 	if(strcmp(username_prefix, "username") != 0)
 	{
 		printf("Unexpected username message received! received message: %s", username_message);
