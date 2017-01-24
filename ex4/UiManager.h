@@ -1,8 +1,7 @@
 #ifndef UI_MANEGER_HEADER
 #define UI_MANEGER_HEADER
 #include <Windows.h>
-
-#define MAX_COMMAND_SIZE 1000 //TODO search for the max sizes
+#include "GameConsts.h"
 
 DWORD WINAPI RunUiManager(LPVOID lpParam);
 
@@ -11,7 +10,7 @@ typedef struct data_ui
 	HANDLE UserEnteredTextSemaphore;
 	HANDLE EngineDoneWithUserMessageSemaphore;
 	HANDLE PlayersTurnEvent;
-	char command[MAX_COMMAND_SIZE];
+	char command[MAX_COMMAND_LENGTH];
 } data_ui;
 
 #endif

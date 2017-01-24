@@ -27,7 +27,7 @@ void ReadFromClient(char *command)
 {
 	int index = 0;
 	char current_char;
-	memset(command, '\0', MAX_COMMAND_SIZE);
+	memset(command, '\0', MAX_COMMAND_LENGTH);
 	while ((current_char = getchar()) != '\n')
 	{
 		command[index++] = current_char;

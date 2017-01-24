@@ -10,9 +10,7 @@
 #include "Log.h"
 #include "Mutex.h"
 #include "Semaphore.h"
-#define SIZE_OF_USERNAME 30
-#define SIZE_OF_USERNAME_MESSAGE 41
-#define MESSAGE_MAX_SIZE 80
+#include "GameConsts.h"
 
 void RunClientCommunicationThread(data_communication *communication);
 

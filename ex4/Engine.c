@@ -47,12 +47,12 @@ void RunClient(int port, char *username)
 
 void ConnectToServer(data_communication *communication) 
 {
-	char username_message[SIZE_OF_USERNAME_MESSAGE];
+	char username_message[MAX_SIZE_OF_USERNAME_MESSAGE];
 	if (connect_socket(communication->port, &communication->socket) == TRUE) 
 	{
 		write_log_and_print("Connected to server on port %d\n", communication->port);
 		
-		memset(username_message, '\0', SIZE_OF_USERNAME_MESSAGE);
+		memset(username_message, '\0', MAX_SIZE_OF_USERNAME_MESSAGE);
 		strcat(username_message, "username=");
 		strcat(username_message, communication->username);
 		printf("sending %s\\n\n", username_message);
@@ -210,7 +210,7 @@ BOOL CheckIfUserNameValid(char *user_name)
 {
 	int length,i;
 	length = strlen(user_name); //returns not including \0
-	if(length>SIZE_OF_USERNAME)
+	if(length>MAX_USER_NAME_LENGTH)
 		return FALSE;
 	else
 	{
