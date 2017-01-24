@@ -15,7 +15,7 @@ typedef struct communication_data
 	char username[MAX_USER_NAME_LENGTH];
 	char symbol;
 
-	char** all_users;
+	char (*all_users)[MAX_USER_NAME_LENGTH];
 	SOCKET* all_users_sockets;
 } communication_data;
 

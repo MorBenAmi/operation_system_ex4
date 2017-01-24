@@ -36,8 +36,7 @@ void HandleIncomingMessage(communication_data* data)
 	}
 	else if(strstr(data->message, "broadcast"))
 	{
-		//broadcast <message>
-		//todo: broadcast the message to all users..
+		HandleBroadcastMessage(data);
 	}
 	else if(strstr(data->message, "players") == data->message)
 	{
@@ -111,7 +110,7 @@ BOOL HandleBroadcastMessage(communication_data* data)
 	write_log("Broadcast message from user %s: %s\n", data->username, message);
 	for(i = 0; i < MAX_NUM_OF_PLAYERS; i++)
 	{
-		if(data->all_users_sockets[i] != data->socket)
+		if(data->all_users_sockets[i] != INVALID_SOCKET && data->all_users_sockets[i] != data->socket)
 		{
 			if(write_to_socket(data->all_users_sockets[i], broadcast_message) == FALSE)
 				return FALSE;

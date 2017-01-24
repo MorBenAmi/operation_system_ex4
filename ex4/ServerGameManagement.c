@@ -4,15 +4,10 @@ void start_server(int port)
 {
 	char users[MAX_NUM_OF_PLAYERS][MAX_USER_NAME_LENGTH];
 	SOCKET user_sockets[MAX_NUM_OF_PLAYERS];
-	char symbols[MAX_NUM_OF_PLAYERS];
+	char symbols[MAX_NUM_OF_PLAYERS] = {'@','#','%','*'};
 	communication_data players_communication_data[MAX_NUM_OF_PLAYERS];
-	HANDLE players_communication_thread[MAX_NUM_OF_PLAYERS];
+	HANDLE players_communication_thread[MAX_NUM_OF_PLAYERS] = {NULL};
 	int num_of_threads = 0;
-
-	symbols[0] = '@';
-	symbols[1] = '#';
-	symbols[2] = '%';
-	symbols[3] = '*';
 
 	if(WaitForPlayers(port, user_sockets, users, symbols, players_communication_data, players_communication_thread) == FALSE)
 	{
@@ -132,7 +127,7 @@ BOOL WaitForPlayers(int port, SOCKET user_sockets[MAX_NUM_OF_PLAYERS],
 		players_communications[connected_users_count].symbol = symbols[connected_users_count];
 		memset(players_communications[connected_users_count].message, '\0', MAX_COMMAND_LENGTH);
 		players_communications[connected_users_count].all_users_sockets = user_sockets;
-		players_communications[connected_users_count].all_users = (char**)users;
+		players_communications[connected_users_count].all_users = users;
 
 		players_communication_thread[connected_users_count] = CreateThread(NULL, 0, ServerCommunicationThreadStart, &(players_communications[connected_users_count]), 0, NULL);
 		if(players_communication_thread[connected_users_count] == NULL)
