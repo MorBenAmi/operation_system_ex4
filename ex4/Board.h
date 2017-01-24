@@ -4,8 +4,9 @@
 #include <stdlib.h>
 #include <windows.h>
 #include <string.h>
+#include "GameConsts.h"
+
 #define CELL_SIZE 7
-#define NUM_OF_PLAYERS 4
 #define BOARD_SIZE 100
 #define SIZE_OF_INT 33
 #define NUM_OF_LADDERS_OR_SNAKES 8
@@ -18,14 +19,17 @@ typedef struct cell
 {
 	char value[CELL_SIZE];
 	int destination_cell;
-	BOOL ladder_head; //todo switch to enum
-	BOOL ladder_tail;
-	BOOL snake_head;
-	BOOL snake_tail;
-	BOOL players_in_cell[NUM_OF_PLAYERS];
+	BOOL players_in_cell[MAX_NUM_OF_PLAYERS];
 }cell;
 
+typedef struct board
+{
+	cell cells[BOARD_SIZE];
+	int players_location[MAX_NUM_OF_PLAYERS];
+}board;
+
 void BasicBoardFill(int i, cell *data);
+void BuildBoard(board *_board);
 void UpdateSnakeHead(cell *curr, int dest);
 void UpdateSnaketail(cell *curr);
 void UpdateLadderHead(cell *curr);
@@ -33,6 +37,8 @@ void UpdateLadderTail(cell *curr, int dest);
 void PrintLineSeperator();
 void PrintCell(cell cur_cell);
 void PrintBoardLine(cell board[], int line);
-void BuildingBoard();
+void PrintBoard(board *_board);
+
+void UpdateBoard(board *_board, int player, int rolled);
 
 #endif 

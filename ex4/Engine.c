@@ -5,7 +5,7 @@ void RunClient(int port, char *username)
 {
 	HANDLE mutexes[2]={NULL};
 	DWORD lock_result;
-
+	board _board;
 	data_ui ui;
 	data_communication communication;
 	communication.port = port;
@@ -23,16 +23,19 @@ void RunClient(int port, char *username)
 		printf("ERROR\n\n");
 	}
 	
+	BuildBoard(&_board);
+	PrintBoard(&_board);
+
 	while (1) 
 	{
 		lock_result = (WaitForMultipleObjects(2, mutexes, FALSE, INFINITE));
 		switch (lock_result)
 		{
 			case WAIT_OBJECT_0:				
-				ReceivedUserMessage(&ui);
+				ReceivedUserMessage(&ui, &_board);
 				break;
 			case WAIT_OBJECT_0 + 1:
-				HandleServerMessage(&communication, &ui);
+				HandleServerMessage(&communication, &ui, &_board);
 				break;
 			default:
 				printf("result: 0x%x\n", GetLastError());
@@ -106,27 +109,26 @@ void RunUiThread(data_ui *ui)
 	}
 }
 
-void ReceivedUserMessage(data_ui *ui)
+void ReceivedUserMessage(data_ui *ui, board *_board)
 {
 	DWORD return_value;
-	printf("Recieved: %s\n", ui->command);
 	Sleep(1000); //todo remove - only for debug
 	HandleUserCommand(ui->command);
 	if(strcmp(ui->command,"play")==0)
 	{
 		return_value = WaitForSingleObject(ui->PlayersTurnEvent, 0);
 		if (return_value == WAIT_TIMEOUT)
-			ReleaseSemaphoreSimple(ui->EngineDoneWithUserMessageSemaphore);///check if correct
+		{
+
+		}
 		else
 		{
 			//to do rand() print message and broadcast
 
 			ResetEvent(ui->PlayersTurnEvent);
-			ReleaseSemaphoreSimple(ui->EngineDoneWithUserMessageSemaphore);///check if 
 		}
-
 	}
-	//if play SetEvent(ui->PlayersTurnEvent);
+	ReleaseSemaphoreSimple(ui->EngineDoneWithUserMessageSemaphore);///check if 
 }
 
 void HandleUserCommand(char *command)
@@ -142,7 +144,10 @@ void HandleUserCommand(char *command)
 		if(strcmp(token, "message")==0)
 		{
 			if(num_of_arg_in_command!=3)
+			{
 				write_log_and_print("Illegal argument for command %s. Command format is %s <user> <message>",token, token);
+				return;
+			}
 			token = strtok(NULL, " ");
 			if(CheckIfUserNameValid(token)==FALSE)
 				write_log_and_print("Illegal username");
@@ -172,12 +177,13 @@ void HandleUserCommand(char *command)
 	// if Game ended: close_socket(); 
 }
 
-void HandleServerMessage(data_communication *communication,data_ui *ui)
+void HandleServerMessage(data_communication *communication, data_ui *ui, board *_board)
 {
 	write_log_and_print("Received from server: %s\\n\n", communication->message);
 	Sleep(1000); //todo remove - only for debug
 	if(strcmp(communication->message,"Your turn to play")==0)
 		SetEvent(ui->PlayersTurnEvent);
+	//todo handle all messages from the server (broadcast etc)
 	ReleaseSemaphoreSimple(communication->EngineDoneWithServerMessageSemaphore);
 }
 

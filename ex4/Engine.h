@@ -11,16 +11,17 @@
 #include "Mutex.h"
 #include "Semaphore.h"
 #include "GameConsts.h"
+#include "Board.h"
 
 void RunClientCommunicationThread(data_communication *communication);
 
 void RunUiThread(data_ui *ui);
 
-void ReceivedUserMessage(data_ui *ui);
+void ReceivedUserMessage(data_ui *ui, board *_board);
 
 void HandleUserCommand(char *command);
 
-void HandleServerMessage(data_communication *communication,data_ui *ui);
+void HandleServerMessage(data_communication *communication, data_ui *ui, board *_board);
 
 void ConnectToServer(data_communication *communication);
 

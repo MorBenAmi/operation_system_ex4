@@ -27,23 +27,19 @@ void BasicBoardFill(int i, cell *data)
 void UpdateSnakeHead(cell *curr, int dest)
 {
 	curr->value[POS_IN_STRING_OF_S]='v';
-	curr->snake_head=1;
 	curr->destination_cell=dest-1;
 }
 void UpdateSnaketail(cell *curr)
 {
 	curr->value[POS_IN_STRING_OF_S]='_';
-	curr->snake_tail=1;
 }
 void UpdateLadderHead(cell *curr)
 {
 	curr->value[POS_IN_STRING_OF_L]='=';
-	curr->ladder_head=1;
 }
 void UpdateLadderTail(cell *curr, int dest)
 {
 	curr->value[POS_IN_STRING_OF_L]='^';
-	curr->ladder_tail=1;
 	curr->destination_cell=dest-1;
 }
 
@@ -58,12 +54,12 @@ void PrintCell(cell cur_cell)
 {
 	int j;
 	int numOfPlayers;
-	char players[NUM_OF_PLAYERS + 1];
+	char players[MAX_NUM_OF_PLAYERS + 1];
 	char *play = "!@#$";
 
-	memset(players, '\0', NUM_OF_PLAYERS + 1);
+	memset(players, '\0', MAX_NUM_OF_PLAYERS + 1);
 	numOfPlayers = 0;
-	for (j = 0; j < NUM_OF_PLAYERS; j++) 
+	for (j = 0; j < MAX_NUM_OF_PLAYERS; j++) 
 	{
 		if (cur_cell.players_in_cell[j] == TRUE)
 		{
@@ -120,33 +116,51 @@ void PrintBoardLine(cell board[], int line)
 	PrintLineSeperator();
 }
 
-void PrintBoard(cell board[])
+void PrintBoard(board *_board)
 {
 	int i;
 	
 	PrintLineSeperator();
 	for(i=9; i>=0; i--)
 	{
-		PrintBoardLine(board, i);
+		PrintBoardLine(_board->cells, i);
 	}
 }
-void BuildingBoard()
+
+void BuildBoard(board *_board)
 {
 	int i;
 	int up_ladder[]={14,31,38,84,59,67,81,91};
 	int bottom_ladder[]={4,9,20,28,40,51,63,71};
 	int snake_head[]={17,54,64,62,93,95,87,99};
 	int snake_tail[] = {7,34,60,19,73,75,24,78};
-	cell board[BOARD_SIZE];
 	for(i=0;i<BOARD_SIZE;i++)
-		BasicBoardFill(i+1, &(board[i]));
+		BasicBoardFill(i+1, &(_board->cells[i]));
 	for(i=0; i<NUM_OF_LADDERS_OR_SNAKES; i++)
 	{
-		UpdateLadderHead(&(board[up_ladder[i]-1]));
-		UpdateLadderTail(&(board[bottom_ladder[i]-1]),up_ladder[i]);
-		UpdateSnaketail(&(board[snake_tail[i]-1]));
-		UpdateSnakeHead(&(board[snake_head[i]-1]),snake_head[i]);
+		UpdateLadderHead(&(_board->cells[up_ladder[i]-1]));
+		UpdateLadderTail(&(_board->cells[bottom_ladder[i]-1]),up_ladder[i]);
+		UpdateSnaketail(&(_board->cells[snake_tail[i]-1]));
+		UpdateSnakeHead(&(_board->cells[snake_head[i]-1]),snake_head[i]);
 	}
-	PrintBoard(board);
-	getchar();
+	for (i=0; i<MAX_NUM_OF_PLAYERS; i++)
+	{
+		_board->players_location[i] = 0;
+	}
+}
+
+void UpdateBoard(board *_board, int player, int rolled) 
+{
+	int location;
+	
+	location = _board->players_location[player];
+	_board->cells[location].players_in_cell[player] = FALSE;
+	location += rolled;
+
+	//Get destination cell
+	location = _board->cells[location].destination_cell;
+
+	//Update player location
+	_board->players_location[player] = location;
+	_board->cells[location].players_in_cell[player] = TRUE;
 }
