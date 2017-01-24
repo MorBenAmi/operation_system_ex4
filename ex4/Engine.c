@@ -22,9 +22,10 @@ void RunClient(int port, char *username)
 	{ 
 		printf("ERROR\n\n");
 	}
-	
+	//init random
+	srand(time(NULL));
+
 	BuildBoard(&_board);
-	PrintBoard(&_board);
 
 	while (1) 
 	{
