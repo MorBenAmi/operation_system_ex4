@@ -35,6 +35,12 @@ BOOL CheckIfMessageValid(char *message);
 
 BOOL CheckIfUserNameValid(char *user_name);
 
+void HandleMessageCommand(char *command, int num_of_args, SOCKET socket);
+
+void HandleBroadcastCommand(char *command, int num_of_args, SOCKET socket);
+
+void HandlePlayCommand(data_communication *communication, data_ui *ui, board *_board);
+
 void RunClient();
 
 #endif

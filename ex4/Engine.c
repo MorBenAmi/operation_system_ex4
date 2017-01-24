@@ -115,62 +115,27 @@ void ReceivedUserMessage(data_communication *communication, data_ui *ui, board *
 	DWORD return_value;
 	//todo split to functions
 	char *token=NULL;
-	int num_of_arg_in_command;
+	int num_of_args;
 	char command_copy[MAX_COMMAND_LENGTH];
 	strcpy(command_copy, ui->command);
-	num_of_arg_in_command = NumOfArgInCommand(command_copy);//returns zero if there are no spaces - one word
+	num_of_args = NumOfArgInCommand(command_copy);//returns one if there are no spaces - one word
 	token = strtok(command_copy, " ");
-	if(num_of_arg_in_command>1) //two words
+	if(num_of_args>1) //atleast two words
 	{
 		if(strcmp(token, "message")==0)
 		{
-			if(num_of_arg_in_command!=3)
-			{
-				write_log_and_print("Illegal argument for command %s. Command format is %s <user> <message>\n",token, token);
-				return;
-			}
-			token = strtok(NULL, " ");
-			if(CheckIfUserNameValid(token)==FALSE)
-			{
-				write_log_and_print("Illegal username\n");
-				return;
-			}
-			token = strtok(NULL, " ");
-			if(CheckIfMessageValid(token)==FALSE)
-			{
-				write_log_and_print("Illegal message\n");
-				return;
-			}
-			SendMessageToServer(communication->socket, ui->command);
+			HandleMessageCommand(ui->command, num_of_args, communication->socket);
 		}
 		else if(strcmp(token, "broadcast")==0)
 		{
-			if(num_of_arg_in_command!=2)
-			{
-				write_log_and_print("Illegal argument for command %s. Command format is %s <message>\n",token, token);
-				return;
-			}
-			token = strtok(NULL, "\n");
-			if(CheckIfMessageValid(token)==FALSE)
-			{
-				write_log_and_print("Illegal message");
-				return;
-			}
-			SendMessageToServer(communication->socket, ui->command);
+			HandleBroadcastCommand(ui->command, num_of_args, communication->socket);
 		}
 		else if(strcmp(token, "play")==0 || strcmp(token, "players")==0) 
 			write_log_and_print("Illegal argument for command %s. Command format is %s\n",token, token);
 	}
 	else if(strcmp(ui->command, "playy")==0)
 	{
-		int dice_result;
-		dice_result = (double)rand() / (RAND_MAX + 1) * (MAX_DICE_VALUE - MIN_DICE_VALUE)  
-            + MIN_DICE_VALUE;
-		UpdateBoard(_board, communication->game_piece, dice_result); 
-		PrintBoard(_board);
-		//to do rand() print message and broadcast
-
-		ResetEvent(ui->PlayersTurnEvent);
+		HandlePlayCommand(communication, ui, _board);
 	}
 	else if (strcmp(ui->command, "players")==0)
 	{	
@@ -181,6 +146,58 @@ void ReceivedUserMessage(data_communication *communication, data_ui *ui, board *
 		ui->command);
 	// if Game ended: close_socket(); 
 	ReleaseSemaphoreSimple(ui->EngineDoneWithUserMessageSemaphore);///check if 
+}
+
+void HandleMessageCommand(char *command, int num_of_args, SOCKET socket)
+{
+	char *token;
+	if(num_of_args!=3)
+	{
+		write_log_and_print("Illegal argument for command %s. Command format is %s <user> <message>\n",token, token);
+		return;
+	}
+	token = strtok(NULL, " ");
+	if(CheckIfUserNameValid(token)==FALSE)
+	{
+		write_log_and_print("Illegal username\n");
+		return;
+	}
+	token = strtok(NULL, " ");
+	if(CheckIfMessageValid(token)==FALSE)
+	{
+		write_log_and_print("Illegal message\n");
+		return;
+	}
+	SendMessageToServer(socket, command);
+}
+
+void HandleBroadcastCommand(char *command, int num_of_args, SOCKET socket)
+{
+	char *token;
+	if(num_of_args!=2)
+	{
+		write_log_and_print("Illegal argument for command %s. Command format is %s <message>\n",token, token);
+		return;
+	}
+	token = strtok(NULL, "\n");
+	if(CheckIfMessageValid(token)==FALSE)
+	{
+		write_log_and_print("Illegal message");
+		return;
+	}
+	SendMessageToServer(socket, command);
+}
+
+void HandlePlayCommand(data_communication *communication, data_ui *ui, board *_board)
+{
+	int dice_result;
+	dice_result = (double)rand() / (RAND_MAX + 1) * (MAX_DICE_VALUE - MIN_DICE_VALUE)  
+        + MIN_DICE_VALUE;
+	UpdateBoard(_board, communication->game_piece, dice_result); 
+	PrintBoard(_board);
+	//to do rand() print message and broadcast
+
+	ResetEvent(ui->PlayersTurnEvent);
 }
 
 void HandleServerMessage(data_communication *communication, data_ui *ui, board *_board)
