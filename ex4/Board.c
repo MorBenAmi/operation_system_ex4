@@ -55,7 +55,6 @@ void PrintCell(cell cur_cell)
 	int j;
 	int numOfPlayers;
 	char players[MAX_NUM_OF_PLAYERS + 1];
-	char *play = "!@#$";
 
 	memset(players, '\0', MAX_NUM_OF_PLAYERS + 1);
 	numOfPlayers = 0;
@@ -63,7 +62,7 @@ void PrintCell(cell cur_cell)
 	{
 		if (cur_cell.players_in_cell[j] == TRUE)
 		{
-			players[numOfPlayers] = play[j];
+			players[numOfPlayers] = GAME_PIECES[j];
 			numOfPlayers++;
 		}
 	}
@@ -149,18 +148,19 @@ void BuildBoard(board *_board)
 	}
 }
 
-void UpdateBoard(board *_board, int player, int rolled) 
+void UpdateBoard(board *_board, char game_piece, int dice_result) 
 {
 	int location;
-	
-	location = _board->players_location[player];
-	_board->cells[location].players_in_cell[player] = FALSE;
-	location += rolled;
-
+	int player_index;
+	player_index = (int)(strchr(GAME_PIECES, game_piece) - GAME_PIECES);
+	location = _board->players_location[player_index];
+	_board->cells[location].players_in_cell[player_index] = FALSE;
+	location += dice_result;
+	//todo - what happens if location >100?
 	//Get destination cell
 	location = _board->cells[location].destination_cell;
 
 	//Update player location
-	_board->players_location[player] = location;
-	_board->cells[location].players_in_cell[player] = TRUE;
+	_board->players_location[player_index] = location;
+	_board->cells[location].players_in_cell[player_index] = TRUE;
 }

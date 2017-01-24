@@ -15,6 +15,8 @@
 #define LINE_SIZE 71
 #define NUM_OF_CELLS_IN_LINE 10
 
+#define GAME_PIECES "!@#$"
+
 typedef struct cell
 {
 	char value[CELL_SIZE];
@@ -39,6 +41,6 @@ void PrintCell(cell cur_cell);
 void PrintBoardLine(cell board[], int line);
 void PrintBoard(board *_board);
 
-void UpdateBoard(board *_board, int player, int rolled);
+void UpdateBoard(board *_board, char game_piece, int dice_result);
 
 #endif 
