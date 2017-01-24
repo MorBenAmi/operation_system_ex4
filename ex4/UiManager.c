@@ -2,7 +2,6 @@
 #include "Mutex.h"
 #include "Semaphore.h"
 #include "Events.h"
-#define PLAY "play"
 void ReadFromClient(char *command);
 
 DWORD WINAPI RunUiManager(LPVOID lpParam)
@@ -12,10 +11,6 @@ DWORD WINAPI RunUiManager(LPVOID lpParam)
 	while (1) 
 	{
 		ReadFromClient(data->command);
-		if (strcmp(data->command, PLAY) == 0)
-		{
-			WaitForSingleObject(data->PlayersTurnEvent, INFINITE);
-		}
 		ReleaseSemaphoreSimple(data->UserEnteredTextSemaphore);
 		WaitForSingleObject(data->EngineDoneWithUserMessageSemaphore, INFINITE);
 	}

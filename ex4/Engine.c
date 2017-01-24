@@ -132,7 +132,7 @@ void ReceivedUserMessage(data_communication *communication, data_ui *ui, game_bo
 		else if(strcmp(token, "play")==0 || strcmp(token, "players")==0) 
 			write_log_and_print("Illegal argument for command %s. Command format is %s\n",token, token);
 	}
-	else if(strcmp(ui->command, "playy")==0)
+	else if(strcmp(ui->command, "play")==0)
 	{
 		HandlePlayCommand(communication, ui, board);
 	}
@@ -192,23 +192,44 @@ void HandlePlayCommand(data_communication *communication, data_ui *ui, game_boar
 	int dice_result;
 	char message[MAX_MESSAGE_SIZE];
 	char broadcast_message[MAX_MESSAGE_SIZE];
+	DWORD lock_result = 0;
+	BOOL is_game_ended = FALSE;
+
+	lock_result = WaitForSingleObject(ui->PlayersTurnEvent, 0);
+	switch(lock_result)
+	{
+		case WAIT_OBJECT_0:
+			break;
+		default:
+			//Its not the player turn, not playing...
+			return;
+	}
+
 	dice_result = (double)rand() / (RAND_MAX + 1) * (MAX_DICE_VALUE - MIN_DICE_VALUE)  
         + MIN_DICE_VALUE;
-	UpdateBoard(board, communication->game_piece, dice_result); 
+	is_game_ended = UpdateBoard(board, communication->game_piece, dice_result); 
 	PrintBoard(board);
 
-	sprintf(message, "Player %c (%s) drew a %d.", 
+	sprintf(message, "Player %c (%s) drew a %d.\n", 
 		communication->game_piece, communication->username, dice_result);
 	printf("%s", message);
 	
-	sprintf(broadcast_message, "broadcast %s\n", message);
+	sprintf(broadcast_message, "broadcast %s", message);
 	SendMessageToServer(communication->socket, broadcast_message);
+	if (is_game_ended)
+	{
+		memset(broadcast_message, '\0', MAX_MESSAGE_SIZE);
+		sprintf(broadcast_message, "Player %s won the game. Congratulations.\n",
+			communication->username);
+		write_log_and_print("%s", broadcast_message);
+		SendMessageToServer(communication->socket, broadcast_message);	
+	}
 	ResetEvent(ui->PlayersTurnEvent);
 }
 
 void HandleServerMessage(data_communication *communication, data_ui *ui, game_board *board)
 {
-	write_log("Received from server: %s\\n\n", communication->message);
+	write_log("Received from server: %s", communication->message);
 
 	printf("%s\n", communication->message);
 	if (strstr(communication->message, "Private message from") == NULL &&
@@ -218,12 +239,7 @@ void HandleServerMessage(data_communication *communication, data_ui *ui, game_bo
 			SetEvent(ui->PlayersTurnEvent);
 		else if (strstr(communication->message, "your game piece is") != NULL)
 		{
-			//todo doens't suppose to work
-			char *token = NULL;
-			token = strtok(communication->message, "your game piece is"); 
-			strcpy(communication->username, token);
-			token = strtok(NULL, "your game piece is");
-			communication->game_piece = *token;
+			communication->game_piece = communication->message[strlen(communication->message)-2];
 		} 
 		else if (strstr(communication->message, "drew a"))
 		{

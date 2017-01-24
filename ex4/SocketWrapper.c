@@ -95,12 +95,12 @@ BOOL receive_from_socket(SOCKET socket, char* buffer)
 			Sleep(100);
 			bytes_just_transferred = recv(socket, cur_place_ptr, 100, 0);//todo change to some constant
 		}
-		if ( bytes_just_transferred == SOCKET_ERROR ) 
+		if (bytes_just_transferred == SOCKET_ERROR) 
 		{
 			SetLastError(WSAGetLastError());
 			return FALSE;
 		}		
-		else if ( bytes_just_transferred == 0 ) 
+		else if (bytes_just_transferred == 0) 
 			return FALSE; // recv() returns zero if connection was gracefully disconnected.
 
 		cur_place_ptr += bytes_just_transferred; // <ISP> pointer arithmetic

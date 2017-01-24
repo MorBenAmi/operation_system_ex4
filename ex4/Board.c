@@ -148,18 +148,18 @@ void BuildBoard(game_board *board)
 	}
 }
 
-void UpdateBoard(game_board *board, char game_piece, int dice_result) 
+BOOL UpdateBoard(game_board *board, char game_piece, int dice_result) 
 {
 	int location;
 	int player_index;
 	player_index = (int)(strchr(GAME_PIECES, game_piece) - GAME_PIECES);
 	location = board->players_location[player_index];
-	if (location > 0) 
+	if (location > 0)
 		board->cells[location].players_in_cell[player_index] = FALSE;
 	location += dice_result;
 	if (location >= BOARD_SIZE)
 	{
-		//game ended
+		return TRUE;
 	}
 	//Get destination cell
 	location = board->cells[location].destination_cell;
@@ -167,4 +167,5 @@ void UpdateBoard(game_board *board, char game_piece, int dice_result)
 	//Update player location
 	board->players_location[player_index] = location;
 	board->cells[location].players_in_cell[player_index] = TRUE;
+	return FALSE;
 }

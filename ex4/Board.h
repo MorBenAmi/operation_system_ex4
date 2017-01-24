@@ -41,6 +41,6 @@ void PrintCell(cell cur_cell);
 void PrintBoardLine(cell board[], int line);
 void PrintBoard(game_board *board);
 
-void UpdateBoard(game_board *board, char game_piece, int dice_result);
+BOOL UpdateBoard(game_board *board, char game_piece, int dice_result);
 
 #endif 
