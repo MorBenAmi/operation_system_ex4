@@ -154,7 +154,8 @@ void UpdateBoard(game_board *board, char game_piece, int dice_result)
 	int player_index;
 	player_index = (int)(strchr(GAME_PIECES, game_piece) - GAME_PIECES);
 	location = board->players_location[player_index];
-	board->cells[location].players_in_cell[player_index] = FALSE;
+	if (location > 0) 
+		board->cells[location].players_in_cell[player_index] = FALSE;
 	location += dice_result;
 	if (location >= BOARD_SIZE)
 	{
