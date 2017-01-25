@@ -27,4 +27,5 @@ void ReadFromClient(char *command)
 	{
 		command[index++] = current_char;
 	}
+	command[index] = '\n';
 }

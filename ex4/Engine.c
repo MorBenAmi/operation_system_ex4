@@ -117,6 +117,7 @@ void ReceivedUserMessage(data_communication *communication, data_ui *ui, game_bo
 	int num_of_args;
 	char command_copy[MAX_COMMAND_LENGTH];
 	strcpy(command_copy, ui->command);
+	command_copy[strlen(command_copy) - 1] = '\0';
 	num_of_args = NumOfArgInCommand(command_copy);//returns one if there are no spaces - one word
 	token = strtok(command_copy, " ");
 	if(num_of_args>1) //atleast two words
@@ -131,12 +132,15 @@ void ReceivedUserMessage(data_communication *communication, data_ui *ui, game_bo
 		}
 		else if(strcmp(token, "play")==0 || strcmp(token, "players")==0) 
 			write_log_and_print("Illegal argument for command %s. Command format is %s\n",token, token);
+		else
+			write_log_and_print("Command %s is not recognized. Possible commands are:players, message, broadcast and play\n", 
+			ui->command);
 	}
-	else if(strcmp(ui->command, "play")==0)
+	else if(strcmp(command_copy, "play")==0)
 	{
 		HandlePlayCommand(communication, ui, board);
 	}
-	else if (strcmp(ui->command, "players")==0)
+	else if (strcmp(command_copy, "players")==0)
 	{	
 		SendMessageToServer(communication->socket, ui->command);
 	}
@@ -202,6 +206,7 @@ void HandlePlayCommand(data_communication *communication, data_ui *ui, game_boar
 			break;
 		default:
 			//Its not the player turn, not playing...
+			printf("Not your turn...\n");
 			return;
 	}
 
@@ -229,9 +234,8 @@ void HandlePlayCommand(data_communication *communication, data_ui *ui, game_boar
 
 void HandleServerMessage(data_communication *communication, data_ui *ui, game_board *board)
 {
-	write_log("Received from server: %s", communication->message);
+	write_log_and_print("Received from server: %s", communication->message);
 
-	printf("%s\n", communication->message);
 	if (strstr(communication->message, "Private message from") == NULL &&
 		strstr(communication->message, "Broadcast from") == NULL)
 	{
