@@ -29,7 +29,7 @@ void HandleIncomingMessage(communication_data* data)
 
 	printf("Received message from user: %s, message: %s\n", data->username, data->message);
 	write_log("Received message from user: %s, message: %s\n", data->username, data->message);
-
+	//todo: bar You may use write_log_and_print function
 	if(strstr(data->message, "message"))
 	{
 		HandleSendMessage(data);

@@ -234,7 +234,8 @@ void HandlePlayCommand(data_communication *communication, data_ui *ui, game_boar
 
 void HandleServerMessage(data_communication *communication, data_ui *ui, game_board *board)
 {
-	write_log_and_print("Received from server: %s", communication->message);
+	write_log("Received from server: %s", communication->message);
+	printf("%s", communication->message);
 
 	if (strstr(communication->message, "Private message from") == NULL &&
 		strstr(communication->message, "Broadcast from") == NULL)
