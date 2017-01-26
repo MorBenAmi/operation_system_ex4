@@ -17,15 +17,15 @@
 #define MIN_DICE_VALUE 1
 #define MAX_DICE_VALUE 6
 
-void RunClientCommunicationThread(data_communication *communication);
+HANDLE RunClientCommunicationThread(data_communication *communication);
 
-void RunUiThread(data_ui *ui);
+HANDLE RunUiThread(data_ui *ui);
 
-void ReceivedUserMessage(data_communication *communication, data_ui *ui, game_board *board);
+BOOL ReceivedUserMessage(data_communication *communication, data_ui *ui, game_board *board);
 
-void HandleServerMessage(data_communication *communication, data_ui *ui, game_board *board);
+BOOL HandleServerMessage(data_communication *communication, data_ui *ui, game_board *board);
 
-void ConnectToServer(data_communication *communication);
+BOOL ConnectToServer(data_communication *communication);
 
 BOOL SendMessageToServer(SOCKET socket, char *message);
 
@@ -39,8 +39,12 @@ void HandleMessageCommand(char *command, int num_of_args, SOCKET socket);
 
 void HandleBroadcastCommand(char *command, int num_of_args, SOCKET socket);
 
-void HandlePlayCommand(data_communication *communication, data_ui *ui, game_board *board);
+BOOL HandlePlayCommand(data_communication *communication, data_ui *ui, game_board *board);
 
 void RunClient();
+
+void ExitGame(data_communication *communication, data_ui *ui, HANDLE *threads);
+
+void ForceCloseHandle(HANDLE handle);
 
 #endif

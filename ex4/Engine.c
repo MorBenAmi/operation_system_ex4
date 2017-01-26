@@ -4,6 +4,7 @@
 void RunClient(int port, char *username)
 {
 	HANDLE mutexes[2]={NULL};
+	HANDLE threads[2]={NULL};
 	DWORD lock_result;
 	game_board board;
 	data_ui ui;
@@ -11,17 +12,23 @@ void RunClient(int port, char *username)
 	communication.port = port;
 	communication.username = username;
 	
-	ConnectToServer(&communication);
+	if (!ConnectToServer(&communication)) 
+	{
+		ExitGame(&communication, &ui, threads);
+	}
 	
-	RunUiThread(&ui);
-	RunClientCommunicationThread(&communication);
+	threads[0] = RunUiThread(&ui);
+	if (threads[0] == NULL)
+	{
+		ExitGame(&communication, &ui, threads);
+	}
+	threads[1] = RunClientCommunicationThread(&communication);
+	if (threads[1] == NULL)
+	{
+		ExitGame(&communication, &ui, threads);
+	}
 	mutexes[0] = ui.UserEnteredTextSemaphore;
 	mutexes[1] = communication.IncomingMessageFromServerSemaphore;
-
-	if (mutexes[0] == NULL || mutexes[1] == NULL) 
-	{ 
-		printf("ERROR\n\n");
-	}
 	
 	//init random
 	srand(time(NULL));
@@ -34,23 +41,19 @@ void RunClient(int port, char *username)
 		switch (lock_result)
 		{
 			case WAIT_OBJECT_0:				
-				ReceivedUserMessage(&communication, &ui, &board);
+				if (ReceivedUserMessage(&communication, &ui, &board) == TRUE)
+					ExitGame(&communication, &ui, threads);
 				break;
 			case WAIT_OBJECT_0 + 1:
-				HandleServerMessage(&communication, &ui, &board);
-				break;
-			default:
-				printf("result: 0x%x\n", GetLastError());
-				//todo exit
+				if (HandleServerMessage(&communication, &ui, &board) == TRUE)
+					ExitGame(&communication, &ui, threads);
 				break;
 		}
 	}
-
-	//todo remove
-	getchar();
+	ExitGame(&communication, &ui, threads);
 }
 
-void ConnectToServer(data_communication *communication) 
+BOOL ConnectToServer(data_communication *communication) 
 {
 	char username_message[MAX_SIZE_OF_USERNAME_MESSAGE];
 	if (connect_socket(communication->port, &communication->socket) == TRUE) 
@@ -66,53 +69,75 @@ void ConnectToServer(data_communication *communication)
 		{
 			printf("Socket error while trying to write data to socket\n");
 			//todo error
+			return FALSE;
 		}
+		return TRUE;
 	}
 	else 
 	{
 		write_log_and_print("Failed connecting to server on port %d\n", communication->port);		
-		//todo exit and free all
+		return FALSE;
 	}
 }
 
-void RunClientCommunicationThread(data_communication *communication) 
+HANDLE RunClientCommunicationThread(data_communication *communication) 
 {
 	HANDLE clientCommunicationHandle = NULL;
 
 	communication->IncomingMessageFromServerSemaphore = 
 		CreateSemaphoreSimple("IncomingMessageFromServerSemaphore");
+	if (communication->IncomingMessageFromServerSemaphore == NULL)
+	{
+		write_log_and_print("Failed to create semaphore - Error code: 0x%x\n", GetLastError());
+		return NULL;
+	}
 	communication->EngineDoneWithServerMessageSemaphore = 
 		CreateSemaphoreSimple("EngineDoneWithServerMessageSemaphore");
-	//todo check if semaphore creation failed
+	if (communication->EngineDoneWithServerMessageSemaphore == NULL)
+	{
+		write_log_and_print("Failed to create semaphore - Error code: 0x%x\n", GetLastError());
+		return NULL;
+	}
+
 	clientCommunicationHandle = CreateThread(NULL, 0, RunClientCommunication, communication, 0, NULL);
 	if(clientCommunicationHandle == NULL)
 	{
 		write_log_and_print("Failed to create thread - Error code: 0x%x\n", GetLastError());
-		return;
 	}
+	return clientCommunicationHandle;
 }
 
-void RunUiThread(data_ui *ui) 
+HANDLE RunUiThread(data_ui *ui) 
 {
 	HANDLE uiHandle = NULL;
 
 	ui->UserEnteredTextSemaphore = 
 		CreateSemaphoreSimple("UserEnteredTextSemaphore");
+	if (ui->UserEnteredTextSemaphore == NULL)
+	{
+		write_log_and_print("Failed to create semaphore - Error code: 0x%x\n", GetLastError());
+		return NULL;
+	}
 	ui->EngineDoneWithUserMessageSemaphore = 
 		CreateSemaphoreSimple("EngineDoneWithUserMessageSemaphore");
-	//todo check if semaphore creation failed
+	
+	if (ui->EngineDoneWithUserMessageSemaphore == NULL)
+	{
+		write_log_and_print("Failed to create semaphore - Error code: 0x%x\n", GetLastError());
+		return NULL;
+	}
+
 	uiHandle = CreateThread(NULL, 0, RunUiManager, ui, 0, NULL);
 	if(uiHandle == NULL)
 	{
 		write_log_and_print("Failed to create thread - Error code: 0x%x\n", GetLastError());
-		return;
 	}
+	return uiHandle;
 }
 
-void ReceivedUserMessage(data_communication *communication, data_ui *ui, game_board *board)
+BOOL ReceivedUserMessage(data_communication *communication, data_ui *ui, game_board *board)
 {
 	DWORD return_value;
-	//todo split to functions
 	char *token=NULL;
 	int num_of_args;
 	char command_copy[MAX_COMMAND_LENGTH];
@@ -138,7 +163,8 @@ void ReceivedUserMessage(data_communication *communication, data_ui *ui, game_bo
 	}
 	else if(strcmp(command_copy, "play")==0)
 	{
-		HandlePlayCommand(communication, ui, board);
+		if (HandlePlayCommand(communication, ui, board) == TRUE)
+			return TRUE;
 	}
 	else if (strcmp(command_copy, "players")==0)
 	{	
@@ -147,8 +173,8 @@ void ReceivedUserMessage(data_communication *communication, data_ui *ui, game_bo
 	else
 		write_log_and_print("Command %s is not recognized. Possible commands are:players, message, broadcast and play\n", 
 		ui->command);
-	// if Game ended: close_socket(); 
 	ReleaseSemaphoreSimple(ui->EngineDoneWithUserMessageSemaphore);///check if 
+	return FALSE;
 }
 
 void HandleMessageCommand(char *command, int num_of_args, SOCKET socket)
@@ -191,7 +217,7 @@ void HandleBroadcastCommand(char *command, int num_of_args, SOCKET socket)
 	SendMessageToServer(socket, command);
 }
 
-void HandlePlayCommand(data_communication *communication, data_ui *ui, game_board *board)
+BOOL HandlePlayCommand(data_communication *communication, data_ui *ui, game_board *board)
 {
 	int dice_result;
 	char message[MAX_MESSAGE_SIZE];
@@ -230,9 +256,10 @@ void HandlePlayCommand(data_communication *communication, data_ui *ui, game_boar
 		SendMessageToServer(communication->socket, broadcast_message);	
 	}
 	ResetEvent(ui->PlayersTurnEvent);
+	return is_game_ended;
 }
 
-void HandleServerMessage(data_communication *communication, data_ui *ui, game_board *board)
+BOOL HandleServerMessage(data_communication *communication, data_ui *ui, game_board *board)
 {
 	write_log("Received from server: %s", communication->message);
 	printf("%s", communication->message);
@@ -240,13 +267,13 @@ void HandleServerMessage(data_communication *communication, data_ui *ui, game_bo
 	if (strstr(communication->message, "Private message from") == NULL &&
 		strstr(communication->message, "Broadcast from") == NULL)
 	{
-		if(strcmp(communication->message, "Your turn to play.")==0)
+		if(strcmp(communication->message, "Your turn to play.") == 0)
 			SetEvent(ui->PlayersTurnEvent);
 		else if (strstr(communication->message, "your game piece is") != NULL)
 		{
 			communication->game_piece = communication->message[strlen(communication->message)-2];
 		} 
-		else if (strstr(communication->message, "drew a"))
+		else if (strstr(communication->message, "drew a") != NULL)
 		{
 			char *token = NULL;
 			char game_piece;
@@ -257,9 +284,11 @@ void HandleServerMessage(data_communication *communication, data_ui *ui, game_bo
 			UpdateBoard(board, game_piece, dice_result);
 			PrintBoard(board);
 		} 
+		else if (strstr(communication->message, "won the game") != NULL)
+			return TRUE;
 	}
-	//todo handle all messages from the server (broadcast etc)
 	ReleaseSemaphoreSimple(communication->EngineDoneWithServerMessageSemaphore);
+	return FALSE;
 }
 
 BOOL SendMessageToServer(SOCKET socket, char *message)
@@ -274,7 +303,7 @@ BOOL CheckIfMessageValid(char *message)
 	if (message == NULL)
 		return FALSE;
 	length = strlen(message); //returns not including \0
-	if(length>80)
+	if(length>MAX_MESSAGE_SIZE)
 		return FALSE;
 	else
 	{
@@ -303,6 +332,7 @@ BOOL CheckIfUserNameValid(char *user_name)
 	}
 	return TRUE;
 }
+
 int NumOfArgInCommand(char *command)
 {
 	char *token=NULL;
@@ -318,4 +348,35 @@ int NumOfArgInCommand(char *command)
 		token = strtok(NULL, " ");
 	}
 	return counter;
+}
+
+void ExitGame(data_communication *communication, data_ui *ui, HANDLE *threads)
+{
+	LPDWORD exit_code;
+	close_log();
+	//Close sockets
+	while (threads != NULL)
+	{
+		TerminateThread(*threads, 0); 
+		CloseHandle(*threads);
+		threads++;
+	}
+	//Close semaphores
+	ForceCloseHandle(communication->EngineDoneWithServerMessageSemaphore);
+	ForceCloseHandle(communication->IncomingMessageFromServerSemaphore);
+	ForceCloseHandle(ui->EngineDoneWithUserMessageSemaphore);
+	ForceCloseHandle(ui->UserEnteredTextSemaphore);
+	//Close events
+	ForceCloseHandle(ui->PlayersTurnEvent);
+	//Close sockets
+	if (communication->socket != NULL)
+		closesocket(communication->socket);
+	//Exit
+	exit(GetLastError());
+}
+
+void ForceCloseHandle(HANDLE handle)
+{
+	if (handle != NULL)
+		CloseHandle(handle);
 }
