@@ -20,6 +20,8 @@
 #define COMMAND_PLAYERS "players"
 #define COMMAND_BROADCAST "broadcast"
 
+#define CONNETION_REFUSED_MSG "Connection to server refused. Exiting."
+
 #define COMMAND_MESSAGE_MIN_ARGS 3
 #define COMMAND_BROADCAST_MIN_ARGS 2
 

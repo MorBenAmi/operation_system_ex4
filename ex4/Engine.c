@@ -169,9 +169,17 @@ BOOL ReceivedUserMessage(data_communication *communication, data_ui *ui, game_bo
 	if(num_of_args > 1) //atleast two words
 	{
 		if(strcmp(token, COMMAND_MESSAGE) == 0)
-			HandleMessageCommand(ui->command, num_of_args, communication->socket);
+		{
+			//If failed to send message to the server, finish the game
+			if (HandleMessageCommand(ui->command, num_of_args, communication->socket) == FALSE)
+				return TRUE;
+		}
 		else if(strcmp(token, COMMAND_BROADCAST) == 0)
-			HandleBroadcastCommand(ui->command, num_of_args, communication->socket);
+		{
+			//If failed to send message to the server, finish the game
+			if (HandleBroadcastCommand(ui->command, num_of_args, communication->socket) == FALSE)
+				return TRUE;
+		}
 		else if(strcmp(token, COMMAND_PLAY) == 0 || strcmp(token, COMMAND_PLAYERS) == 0) 
 			write_log_and_print("Illegal argument for command %s. Command format is %s\n", 
 			token, token);
@@ -182,11 +190,12 @@ BOOL ReceivedUserMessage(data_communication *communication, data_ui *ui, game_bo
 	else if(strcmp(command_copy, COMMAND_PLAY) == 0)
 	{
 		if (HandlePlayCommand(communication, ui, board) == TRUE)
-			return TRUE;
+			return TRUE; //The game is ended
 	}
 	else if (strcmp(command_copy, COMMAND_PLAYERS) == 0)
 	{	
-		SendMessageToServer(communication->socket, ui->command);
+		if (SendMessageToServer(communication->socket, ui->command) == FALSE)
+			return TRUE; //Error occured when sending message to the server
 	}
 	else
 		write_log_and_print("Command %s is not recognized. Possible commands are: players, message, broadcast and play.\n", 
@@ -197,45 +206,45 @@ BOOL ReceivedUserMessage(data_communication *communication, data_ui *ui, game_bo
 }
 
 //Handles a message command from the user
-void HandleMessageCommand(char *command, int num_of_args, SOCKET socket)
+BOOL HandleMessageCommand(char *command, int num_of_args, SOCKET socket)
 {
 	char *token = NULL;
 	if(num_of_args < COMMAND_MESSAGE_MIN_ARGS)
 	{
 		write_log_and_print("Illegal argument for command %s. Command format is %s <user> <message>\n",token, token);
-		return;
+		return TRUE;
 	}
 	token = strtok(NULL, " ");
 	if(token == NULL)
 	{
 		write_log_and_print("Illegal username\n");
-		return;
+		return TRUE;
 	}
 	token = strtok(NULL, " ");
 	if(CheckIfMessageValid(token) == FALSE)
 	{
 		write_log_and_print("Illegal message\n");
-		return;
+		return TRUE;
 	}
-	SendMessageToServer(socket, command);
+	return SendMessageToServer(socket, command);
 }
 
 //Handles a braodcast message from the user
-void HandleBroadcastCommand(char *command, int num_of_args, SOCKET socket)
+BOOL HandleBroadcastCommand(char *command, int num_of_args, SOCKET socket)
 {
 	char *token = NULL;
 	if(num_of_args < COMMAND_BROADCAST_MIN_ARGS)
 	{
 		write_log_and_print("Illegal argument for command %s. Command format is %s <message>\n", token, token);
-		return;
+		return TRUE;
 	}
 	token = strtok(NULL, "\n");
 	if(CheckIfMessageValid(token) == FALSE)
 	{
 		write_log_and_print("Illegal message");
-		return;
+		return TRUE;
 	}
-	SendMessageToServer(socket, command);
+	return SendMessageToServer(socket, command);
 }
 
 //Handles play command from the user. Plays only if its his turn. returns TRUE if the game ended
@@ -274,7 +283,8 @@ BOOL HandlePlayCommand(data_communication *communication, data_ui *ui, game_boar
 	
 	sprintf(broadcast_message, "broadcast %s", message);
 	//Updates the server about the play
-	SendMessageToServer(communication->socket, broadcast_message);
+	if (SendMessageToServer(communication->socket, broadcast_message) == FALSE)
+		return TRUE; //Error occured when sending message to the server
 
 	if (is_game_ended == TRUE)
 	{
@@ -282,7 +292,8 @@ BOOL HandlePlayCommand(data_communication *communication, data_ui *ui, game_boar
 		sprintf(broadcast_message, "Player %s won the game. Congratulations.\n",
 			communication->username);
 		write_log_and_print("%s", broadcast_message);
-		SendMessageToServer(communication->socket, broadcast_message);	
+		if (SendMessageToServer(communication->socket, broadcast_message) == FALSE)
+			return TRUE; //Error occured when sending message to the server
 	}
 	ResetEvent(ui->PlayersTurnEvent);
 	return is_game_ended;
@@ -318,6 +329,8 @@ BOOL HandleServerMessage(data_communication *communication, data_ui *ui, game_bo
 		} 
 		else if (strstr(communication->message, "won the game") != NULL)
 			return TRUE;
+		else if (strstr(communication->message, CONNETION_REFUSED_MSG) != NULL)
+			return TRUE; //Connection refused. Exiting...
 	}
 	//Finish handling the message from the server
 	ReleaseSemaphoreSimple(communication->EngineDoneWithServerMessageSemaphore);

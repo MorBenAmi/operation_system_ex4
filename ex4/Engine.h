@@ -37,9 +37,9 @@ int NumOfArgInCommand(char *command);
 
 BOOL CheckIfMessageValid(char *message);
 
-void HandleMessageCommand(char *command, int num_of_args, SOCKET socket);
+BOOL HandleMessageCommand(char *command, int num_of_args, SOCKET socket);
 
-void HandleBroadcastCommand(char *command, int num_of_args, SOCKET socket);
+BOOL HandleBroadcastCommand(char *command, int num_of_args, SOCKET socket);
 
 BOOL HandlePlayCommand(data_communication *communication, data_ui *ui, game_board *board);
 
