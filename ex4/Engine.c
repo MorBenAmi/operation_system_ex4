@@ -182,7 +182,7 @@ BOOL ReceivedUserMessage(data_communication *communication, data_ui *ui, game_bo
 			write_log_and_print("Illegal argument for command %s. Command format is %s\n", 
 			token, token);
 		else
-			write_log_and_print("Command %s is not recognized. Possible commands are:players, message, broadcast and play\n", 
+			write_log_and_print("Command %s is not recognized. Possible commands are: players, message, broadcast and play.\n", 
 			ui->command);
 	}
 	else if(strcmp(command_copy, COMMAND_PLAY) == 0)
@@ -195,7 +195,7 @@ BOOL ReceivedUserMessage(data_communication *communication, data_ui *ui, game_bo
 		SendMessageToServer(communication->socket, ui->command);
 	}
 	else
-		write_log_and_print("Command %s is not recognized. Possible commands are:players, message, broadcast and play\n", 
+		write_log_and_print("Command %s is not recognized. Possible commands are: players, message, broadcast and play.\n", 
 		ui->command);
 	//Release the semaphore that engine done with user msgs
 	ReleaseSemaphoreSimple(ui->EngineDoneWithUserMessageSemaphore); 
@@ -333,7 +333,7 @@ BOOL HandleServerMessage(data_communication *communication, data_ui *ui, game_bo
 //Sends a message to the server and prints to the log.
 BOOL SendMessageToServer(SOCKET socket, char *message)
 {
-	write_log("Send to server:%s", message);
+	write_log("Sent to server: %s", message);
 	return write_to_socket(socket, message); 
 }
 
