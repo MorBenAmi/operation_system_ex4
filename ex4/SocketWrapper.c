@@ -80,6 +80,7 @@ BOOL accept_connection(SOCKET listen_socket, SOCKET* accepted_socket)
 	return TRUE;
 }
 
+//Receive a message from the socket until '\n' recieved
 BOOL receive_from_socket(SOCKET socket, char* buffer)
 {
 	char* cur_place_ptr = buffer;
@@ -88,12 +89,12 @@ BOOL receive_from_socket(SOCKET socket, char* buffer)
 	while (1)  
 	{
 		/* send does not guarantee that the entire message is sent */
-		bytes_just_transferred = recv(socket, cur_place_ptr, 100, 0); //todo change to some constant
+		bytes_just_transferred = recv(socket, cur_place_ptr, MAX_COMMAND_LENGTH, 0);
 		while(WSAGetLastError() == WSAEWOULDBLOCK) //when the socket is nonblocking: no data available yet
 		{
 			WSASetLastError(0);
 			Sleep(100);
-			bytes_just_transferred = recv(socket, cur_place_ptr, 100, 0);//todo change to some constant
+			bytes_just_transferred = recv(socket, cur_place_ptr, MAX_COMMAND_LENGTH, 0);
 		}
 		if (bytes_just_transferred == SOCKET_ERROR) 
 		{
@@ -112,7 +113,8 @@ BOOL receive_from_socket(SOCKET socket, char* buffer)
 	return TRUE;
 }
 
-BOOL write_to_socket(SOCKET socket, char* message_to_send)
+//Writes the message_to_send to the socket
+BOOL write_to_socket(SOCKET socket, char *message_to_send)
 {
 	const char* cur_place_ptr = message_to_send;
 	int bytes_transferred;
@@ -134,7 +136,8 @@ BOOL write_to_socket(SOCKET socket, char* message_to_send)
 	return TRUE;
 }
 
-BOOL connect_socket(int port ,SOCKET* socket_client)
+//Connects to local socket to specific port. return TRUE if succeed
+BOOL connect_socket(int port, SOCKET *socket_client)
 {
 	SOCKADDR_IN clientService;
 	
@@ -149,7 +152,8 @@ BOOL connect_socket(int port ,SOCKET* socket_client)
 	clientService.sin_port = htons(port);
 	clientService.sin_addr.s_addr = inet_addr(SRV_ADDRESS);
 
-	if ( connect(*socket_client, (SOCKADDR*) &clientService, sizeof(clientService) ) == SOCKET_ERROR) {
+	if (connect(*socket_client, (SOCKADDR*) &clientService, sizeof(clientService) ) == SOCKET_ERROR) 
+	{
         SetLastError(WSAGetLastError());
 		WSACleanup();
         return FALSE;

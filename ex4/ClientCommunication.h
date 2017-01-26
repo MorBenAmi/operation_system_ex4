@@ -5,18 +5,18 @@
 #include "Mutex.h"
 #include "Semaphore.h"
 
-#define MAX_COMMAND_SIZE 80 //TODO search for the max sizes
-
 typedef struct data_communication
 {
 	HANDLE IncomingMessageFromServerSemaphore;
 	HANDLE EngineDoneWithServerMessageSemaphore;
 	SOCKET socket;
-	char message[MAX_COMMAND_SIZE];
+	char message[MAX_COMMAND_LENGTH];
 	char *username;
 	char game_piece;
 	int port;
+	BOOL communication_error;
 } data_communication;
+
 DWORD WINAPI RunClientCommunication(LPVOID lpParam);
 
 #endif

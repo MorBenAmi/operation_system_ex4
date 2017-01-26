@@ -5,6 +5,8 @@
 
 DWORD WINAPI RunUiManager(LPVOID lpParam);
 
+void ReadFromClient(char *command);
+
 typedef struct data_ui
 {
 	HANDLE UserEnteredTextSemaphore;

@@ -5,6 +5,7 @@
 #include <winsock2.h>
 #include <windows.h>
 #include <conio.h>
+#include "GameConsts.h"
 #pragma comment(lib, "ws2_32.lib")
 
 #define SRV_ADDRESS "127.0.0.1"
