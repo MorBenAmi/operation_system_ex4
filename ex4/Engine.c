@@ -87,13 +87,7 @@ BOOL ConnectToServer(data_communication *communication)
 		strcat(username_message, communication->username);
 		strcat(username_message, "\n");
 
-		if (SendMessageToServer(communication->socket, username_message) == FALSE) 
-		{
-			SetLastError(WSAGetLastError());
-			write_log_and_print("Error while trying to write data to socket. Error code: 0x%x\n", GetLastError());
-			return FALSE;
-		}
-		return TRUE;
+		return SendMessageToServer(communication->socket, username_message);
 	}
 	else 
 	{
@@ -333,8 +327,15 @@ BOOL HandleServerMessage(data_communication *communication, data_ui *ui, game_bo
 //Sends a message to the server and prints to the log.
 BOOL SendMessageToServer(SOCKET socket, char *message)
 {
+	BOOL result;
 	write_log("Sent to server: %s", message);
-	return write_to_socket(socket, message); 
+	result = write_to_socket(socket, message); 
+	if (result == FALSE)
+	{
+		SetLastError(WSAGetLastError());
+		write_log_and_print("Error while trying to write data to socket. Error code: 0x%x\n", GetLastError());
+	}
+	return result;
 }
 
 //Check is the message is valid. 

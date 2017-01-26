@@ -14,6 +14,8 @@ DWORD WINAPI RunClientCommunication(LPVOID lpParam)
 		}
 		else 
 		{
+			SetLastError(WSAGetLastError());
+			write_log_and_print("Error while trying to receive data to socket. Error code: 0x%x\n", GetLastError());
 			ReleaseSemaphoreSimple(communication->IncomingMessageFromServerSemaphore);
 			communication->communication_error = TRUE;
 			return GetLastError();
