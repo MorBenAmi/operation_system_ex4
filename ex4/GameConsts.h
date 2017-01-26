@@ -11,6 +11,7 @@
 #define MAX_PRIVATE_MESSAGE_LENGTH 1000 //todo: change to real value
 #define MAX_BROADCAST_MESSAGE_LENGTH 1000 //todo: change to real value
 #define MAX_USER_NOT_EXIST_MESSAGE_LENGTH 1000 //todo: change to real value
+#define MAX_PLAYER_TURN_MESSAGE_LENGTH 1000
 
 #define MAX_SIZE_OF_USERNAME_MESSAGE 41
 #define MAX_MESSAGE_SIZE 80
