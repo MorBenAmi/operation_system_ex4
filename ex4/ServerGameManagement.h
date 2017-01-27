@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <time.h>
 #include "Log.h"
+#include "Semaphore.h"
 #include "Mutex.h"
 #include "MutexConstants.h"
 #include "SocketWrapper.h"
@@ -13,7 +14,10 @@ void start_server(int port);
 
 BOOL WaitForPlayers(int port, SOCKET user_sockets[MAX_NUM_OF_PLAYERS], 
 	char users[MAX_NUM_OF_PLAYERS][MAX_USER_NAME_LENGTH], char symbols[MAX_NUM_OF_PLAYERS], 
-	communication_data players_communications[MAX_NUM_OF_PLAYERS], HANDLE players_communication_thread[MAX_NUM_OF_PLAYERS]);
+	communication_data players_communications[MAX_NUM_OF_PLAYERS], HANDLE players_communication_thread[MAX_NUM_OF_PLAYERS],
+	HANDLE all_threads_must_end_event);
+
+BOOL PlayGame(char users[MAX_NUM_OF_PLAYERS][MAX_USER_NAME_LENGTH], SOCKET user_sockets[MAX_NUM_OF_PLAYERS], char symbols[MAX_NUM_OF_PLAYERS], HANDLE all_threads_must_end_event);
 
 void CloseConnections(SOCKET user_sockets[MAX_NUM_OF_PLAYERS]);
 
@@ -32,3 +36,5 @@ BOOL BroadcastNewPlayerJoined(SOCKET user_sockets[MAX_NUM_OF_PLAYERS], int index
 BOOL IsUsernameExists(char username[MAX_USER_NAME_LENGTH], char users[MAX_NUM_OF_PLAYERS][MAX_USER_NAME_LENGTH], int user_index);
 
 void CloseThreads(HANDLE players_communication_thread[MAX_NUM_OF_PLAYERS]);
+
+BOOL ShouldFinishExecution();

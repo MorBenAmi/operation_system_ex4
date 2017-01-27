@@ -12,6 +12,9 @@ void StartServerCommunication(communication_data* data)
 {
 	while(1)
 	{
+		if(ShouldFinishThread(data->all_threads_must_end_event) == TRUE)
+			return;
+
 		memset(data->message, '\0', MAX_COMMAND_LENGTH);
 		if(receive_from_socket(data->socket, data->message) == FALSE)
 		{
@@ -19,35 +22,46 @@ void StartServerCommunication(communication_data* data)
 			return;
 		}
 
-		HandleIncomingMessage(data);
+		if(HandleIncomingMessage(data) == FALSE)
+		{
+			SetEvent(data->all_threads_must_end_event);
+			return;
+		}
 	}
 }
 
-void HandleIncomingMessage(communication_data* data)
+BOOL HandleIncomingMessage(communication_data* data)
 {
+	BOOL handle_result;
+
 	lock_mutex(HANDLE_INCOMING_MESSAGE_MUTEX);
 
 	printf("Received message from user: %s, message: %s\n", data->username, data->message);
 	write_log("Received message from user: %s, message: %s\n", data->username, data->message);
 
-	if(strstr(data->message, "message"))
+	if(strstr(data->message, "message") == data->message)
 	{
-		HandleSendMessage(data);
+		handle_result = HandleSendMessage(data);
 	}
-	else if(strstr(data->message, "broadcast"))
+	else if(strstr(data->message, "broadcast") == data->message)
 	{
-		HandleBroadcastMessage(data);
+		handle_result = HandleBroadcastMessage(data);
 	}
 	else if(strstr(data->message, "players") == data->message)
 	{
 		//players
-		//todo: notify game managment to handle this..
+		//todo: send players
 	}
-	else if(strstr(data->message, "Player"))
+	else if(strstr(data->message, "Player") == data->message)
 	{
-		//Player <game piece> (<username>) drew a <toss result>
-		//todo: player did a move..
-		// notify game management to handle this..
+		if(strstr(data->message, "drew") != NULL)
+			handle_result = HandlePlayerTurnMessage(data);
+		else if(strstr(data->message, "won") != NULL)
+			handle_result = HandlePlayeWonMessage(data);
+		else
+		{
+			//todo: unknown message.. ignore?
+		}
 	}
 	else
 	{
@@ -55,6 +69,8 @@ void HandleIncomingMessage(communication_data* data)
 	}
 
 	unlock_mutex(HANDLE_INCOMING_MESSAGE_MUTEX);
+
+	return handle_result;
 }
 
 BOOL HandleSendMessage(communication_data* data)
@@ -118,4 +134,79 @@ BOOL HandleBroadcastMessage(communication_data* data)
 	}
 
 	return TRUE;
+}
+
+BOOL HandlePlayerTurnMessage(communication_data* data)
+{
+	//Player <game piece> (<username>) drew a <toss result>
+	int i = 0;
+	HANDLE turn_finished_event = NULL;
+
+	write_log(data->message);
+	for(i = 0; i < MAX_NUM_OF_PLAYERS; i++)
+	{
+		if(data->all_users_sockets[i] != INVALID_SOCKET && data->all_users_sockets[i] != data->socket)
+		{
+			if(write_to_socket(data->all_users_sockets[i], data->message) == FALSE)
+			{
+				write_log("Failed to send player draw result, Error_code: 0x%x\n", GetLastError());
+				return FALSE;
+			}
+		}
+	}
+
+	turn_finished_event = InitEvent("TurnFinished");
+	if(turn_finished_event == NULL)
+	{
+		write_log("Failed to create TurnFinished Event, Error_code: 0x%x\n", GetLastError());
+		return FALSE;
+	}
+
+	SetEvent(turn_finished_event);
+	return TRUE;
+}
+
+BOOL HandlePlayeWonMessage(communication_data* data)
+{
+	int i = 0;
+	HANDLE won_event = NULL;
+
+	write_log(data->message);
+	for(i = 0; i < MAX_NUM_OF_PLAYERS; i++)
+	{
+		if(data->all_users_sockets[i] != INVALID_SOCKET && data->all_users_sockets[i] != data->socket)
+		{
+			if(write_to_socket(data->all_users_sockets[i], data->message) == FALSE)
+			{
+				write_log("Failed to send player won message, Error_code: 0x%x\n", GetLastError());
+				return FALSE;
+			}
+		}
+	}
+	won_event = InitEvent("PlayerWon");
+	if(won_event == NULL)
+	{
+		write_log("Failed to create PlayerWon Event");
+		return FALSE;
+	}
+
+	SetEvent(won_event);
+	return TRUE;
+}
+
+BOOL ShouldFinishThread(HANDLE all_threads_must_end_event)
+{
+	DWORD allThreadsMustEndSignal = WaitForSingleObject(all_threads_must_end_event,0);
+	switch(allThreadsMustEndSignal)
+	{
+		case WAIT_OBJECT_0:
+			return TRUE;
+			break;
+		case WAIT_TIMEOUT:
+			return FALSE;
+			break;
+		default:
+			return TRUE;
+			break;
+	}
 }

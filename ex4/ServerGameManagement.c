@@ -3,13 +3,21 @@
 void start_server(int port)
 {
 	char users[MAX_NUM_OF_PLAYERS][MAX_USER_NAME_LENGTH];
-	SOCKET user_sockets[MAX_NUM_OF_PLAYERS];
+	SOCKET user_sockets[MAX_NUM_OF_PLAYERS] = {INVALID_SOCKET};
 	char symbols[MAX_NUM_OF_PLAYERS] = {'@','#','%','*'};
 	communication_data players_communication_data[MAX_NUM_OF_PLAYERS];
 	HANDLE players_communication_thread[MAX_NUM_OF_PLAYERS] = {NULL};
 	int num_of_threads = 0;
+	HANDLE all_threads_must_end_event;
+	
+	all_threads_must_end_event = InitEvent("AllThreadsMustEnd");
+	if(all_threads_must_end_event == NULL)
+	{
+		write_log("Failed to create event!. Error_code: 0x%x\n", GetLastError());
+		return;
+	}
 
-	if(WaitForPlayers(port, user_sockets, users, symbols, players_communication_data, players_communication_thread) == FALSE)
+	if(WaitForPlayers(port, user_sockets, users, symbols, players_communication_data, players_communication_thread, all_threads_must_end_event) == FALSE)
 	{
 		CloseConnections(user_sockets);
 		return;
@@ -24,6 +32,7 @@ void start_server(int port)
 	}
 
 	//todo: play the game? do some magic to know when message arrives... or when the game is finished..
+	PlayGame(users, user_sockets, symbols, players_communication_data);
 
 	while(players_communication_thread[num_of_threads] != NULL)
 		num_of_threads++;
@@ -34,7 +43,8 @@ void start_server(int port)
 
 BOOL WaitForPlayers(int port, SOCKET user_sockets[MAX_NUM_OF_PLAYERS], 
 	char users[MAX_NUM_OF_PLAYERS][MAX_USER_NAME_LENGTH], char symbols[MAX_NUM_OF_PLAYERS], 
-	communication_data players_communications[MAX_NUM_OF_PLAYERS], HANDLE players_communication_thread[MAX_NUM_OF_PLAYERS])
+	communication_data players_communications[MAX_NUM_OF_PLAYERS], HANDLE players_communication_thread[MAX_NUM_OF_PLAYERS],
+	HANDLE all_threads_must_end_event)
 {
 	SOCKET listen_sock;
 	int i = 0;
@@ -128,6 +138,7 @@ BOOL WaitForPlayers(int port, SOCKET user_sockets[MAX_NUM_OF_PLAYERS],
 		memset(players_communications[connected_users_count].message, '\0', MAX_COMMAND_LENGTH);
 		players_communications[connected_users_count].all_users_sockets = user_sockets;
 		players_communications[connected_users_count].all_users = users;
+		players_communications[connected_users_count].all_threads_must_end_event = all_threads_must_end_event;
 
 		players_communication_thread[connected_users_count] = CreateThread(NULL, 0, ServerCommunicationThreadStart, &(players_communications[connected_users_count]), 0, NULL);
 		if(players_communication_thread[connected_users_count] == NULL)
@@ -145,6 +156,87 @@ BOOL WaitForPlayers(int port, SOCKET user_sockets[MAX_NUM_OF_PLAYERS],
 
 	close_socket(listen_sock);
 	return TRUE;
+}
+
+BOOL PlayGame(char users[MAX_NUM_OF_PLAYERS][MAX_USER_NAME_LENGTH], SOCKET user_sockets[MAX_NUM_OF_PLAYERS], char symbols[MAX_NUM_OF_PLAYERS], HANDLE all_threads_must_end_event)
+{
+	int current_player = 0;
+	int i = 0;
+	int num_of_players = 0;
+	char player_turn_message[MAX_PLAYER_TURN_MESSAGE_LENGTH];
+	HANDLE wait_handles[3];
+	DWORD wait_result = 0;
+
+	for(i = 0; i < MAX_NUM_OF_PLAYERS; i++)
+	{
+		if(user_sockets[i] != INVALID_SOCKET)
+			num_of_players++;
+	}
+
+	wait_handles[0] = InitEvent("TurnFinished");
+	if(wait_handles[0] == NULL)
+	{
+		write_log("Failed creating TurnFinished Event, Error_code: 0x%x\n", GetLastError());
+		return FALSE;
+	}
+	wait_handles[1] = InitEvent("PlayerWon");
+	if(wait_handles[1] == NULL)
+	{
+		write_log("Failed creating PlayerWon Event, Error_code: 0x%x\n", GetLastError());
+		return FALSE;
+	}
+	wait_handles[2] = all_threads_must_end_event;
+
+	while(1)
+	{
+		if(ShouldFinishExecution(all_threads_must_end_event) == FALSE)
+			return FALSE;
+
+		lock_mutex(BROADCAST_MUTEX);
+
+		if(write_to_socket(user_sockets[current_player], "Your turn to play.\n") == FALSE)
+		{
+			write_log("Failed to write to socket, Error_code: 0x%x\n", GetLastError());
+			unlock_mutex(BROADCAST_MUTEX);
+			return FALSE;
+		}
+		
+		memset(player_turn_message, '\0', MAX_PLAYER_TURN_MESSAGE_LENGTH);
+		sprintf(player_turn_message, "It is now %s's turn to play.\n", users[current_player]);
+		write_log(player_turn_message);
+		for(i = 0; i < num_of_players; i++)
+		{
+			if(i != current_player)
+			{
+				if(write_to_socket(user_sockets[i], player_turn_message) == FALSE)
+					unlock_mutex(BROADCAST_MUTEX);
+					return FALSE;
+			}
+		}
+
+		unlock_mutex(BROADCAST_MUTEX);
+
+		wait_result = WaitForMultipleObjects(num_of_players + 2, wait_handles, FALSE, INFINITE);
+		switch(wait_result)
+		{
+			case WAIT_OBJECT_0: // Turn Finished
+				ResetEvent(wait_handles[0]);
+				break;
+			case WAIT_OBJECT_0 + 1: // Player Won
+				return TRUE;
+				break;
+			case WAIT_OBJECT_0 + 2: // all threads must end
+				return FALSE;
+				break;
+			default:
+				write_log("Unexpected wait result, result: %d, Error_code: 0x%x\n", wait_result, GetLastError());
+				return FALSE;
+				break;
+		}
+
+		current_player++;
+		current_player = current_player % num_of_players;
+	}
 }
 
 void WriteToLogOrderOfPlayers(SOCKET user_sockets[MAX_NUM_OF_PLAYERS], char users[MAX_NUM_OF_PLAYERS][MAX_USER_NAME_LENGTH], char symbols[MAX_NUM_OF_PLAYERS])
@@ -295,4 +387,21 @@ BOOL IsUsernameExists(char username[MAX_USER_NAME_LENGTH], char users[MAX_NUM_OF
 			return TRUE;
 	}
 	return FALSE;
+}
+
+BOOL ShouldFinishExecution(HANDLE all_threads_must_end_event)
+{
+	DWORD allThreadsMustEndSignal = WaitForSingleObject(all_threads_must_end_event,0);
+	switch(allThreadsMustEndSignal)
+	{
+		case WAIT_OBJECT_0:
+			return TRUE;
+			break;
+		case WAIT_TIMEOUT:
+			return FALSE;
+			break;
+		default:
+			return TRUE;
+			break;
+	}
 }

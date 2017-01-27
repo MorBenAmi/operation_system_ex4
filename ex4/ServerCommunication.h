@@ -17,12 +17,19 @@ typedef struct communication_data
 
 	char (*all_users)[MAX_USER_NAME_LENGTH];
 	SOCKET* all_users_sockets;
+	HANDLE all_threads_must_end_event;
 } communication_data;
 
 DWORD WINAPI ServerCommunicationThreadStart(LPVOID param);
 
 void StartServerCommunication(communication_data* data);
 
-void HandleIncomingMessage(communication_data* data);
+BOOL HandleIncomingMessage(communication_data* data);
 
 BOOL HandleSendMessage(communication_data* data);
+
+BOOL HandlePlayerTurnMessage(communication_data* data);
+
+BOOL HandlePlayerWonMessage(communication_data* data);
+
+BOOL ShouldFinishThread(HANDLE all_threads_must_end_event);
