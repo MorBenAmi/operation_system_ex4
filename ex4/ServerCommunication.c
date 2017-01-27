@@ -18,6 +18,11 @@ void StartServerCommunication(communication_data* data)
 		memset(data->message, '\0', MAX_COMMAND_LENGTH);
 		if(receive_from_socket(data->socket, data->message) == FALSE)
 		{
+			if(GetLastError() == 0)
+			{
+				//connection closed..
+				return;
+			}
 			write_log_and_print("Error while receiving message from user: %s, ErrorCode: 0x%x\n", data->username, GetLastError());
 			return;
 		}

@@ -79,7 +79,7 @@ BOOL WaitForPlayers(int port, SOCKET user_sockets[MAX_NUM_OF_PLAYERS],
 		while(user_sockets[connected_users_count] == INVALID_SOCKET)
 		{
 			time(&stop_time);
-			if(difftime(stop_time,start_time) > 60)
+			if(difftime(stop_time,start_time) > MAX_TIME_TO_WAIT_FOR_PLAYERS)
 			{
 				if(i == 0)
 				{

@@ -8,7 +8,7 @@
 #include "SocketWrapper.h"
 #include "ServerCommunication.h"
 #include "GameConsts.h"
-
+#define MAX_TIME_TO_WAIT_FOR_PLAYERS 60
 
 void start_server(int port);
 
