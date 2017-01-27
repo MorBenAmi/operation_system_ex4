@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#define MAX_EVENT_LENGTH 100
+
 HANDLE InitEvent(char *event_name);
 
 #endif
