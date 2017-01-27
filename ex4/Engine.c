@@ -199,7 +199,7 @@ BOOL ReceivedUserMessage(data_communication *communication, data_ui *ui, game_bo
 	}
 	else
 		write_log_and_print("Command %s is not recognized. Possible commands are: players, message, broadcast and play.\n", 
-		ui->command);
+		token);
 	//Release the semaphore that engine done with user msgs
 	ReleaseSemaphoreSimple(ui->EngineDoneWithUserMessageSemaphore); 
 	return FALSE;
@@ -262,7 +262,7 @@ BOOL HandlePlayCommand(data_communication *communication, data_ui *ui, game_boar
 			break;
 		default:
 			//Its not the player turn, not playing...
-			printf("Not your turn...\n");
+			printf("It is not your turn...\n");
 			return FALSE;
 	}
 
@@ -314,15 +314,7 @@ BOOL HandleServerMessage(data_communication *communication, data_ui *ui, game_bo
 		} 
 		else if (strstr(communication->message, "drew a") != NULL)
 		{
-			char *token = NULL;
-			char game_piece;
-			int dice_result;
-
-			game_piece = communication->message[GAME_PIECE_POSITION_IN_DREW_COMMAND];  //game piece
-			dice_result = atoi(&(communication->message[strlen(communication->message) - DICE_RESULT_POSITION]));
-			//Updates the board on the user turn
-			UpdateBoard(board, game_piece, dice_result);
-			PrintBoard(board);
+			HandleOponentTurn(board, communication->message);
 		} 
 		else if (strstr(communication->message, "won the game") != NULL)
 			return TRUE;
@@ -332,6 +324,19 @@ BOOL HandleServerMessage(data_communication *communication, data_ui *ui, game_bo
 	//Finish handling the message from the server
 	ReleaseSemaphoreSimple(communication->EngineDoneWithServerMessageSemaphore);
 	return FALSE;
+}
+
+void HandleOponentTurn(game_board *board, char *message)
+{
+	char *token = NULL;
+	char game_piece;
+	int dice_result;
+
+	game_piece = message[GAME_PIECE_POSITION_IN_DREW_COMMAND];  //game piece
+	dice_result = atoi(&(message[strlen(message) - DICE_RESULT_POSITION]));
+	//Updates the board on the user turn
+	UpdateBoard(board, game_piece, dice_result);
+	PrintBoard(board);
 }
 
 //Sends a message to the server and prints to the log.

@@ -49,4 +49,6 @@ void ExitGame(data_communication *communication, data_ui *ui, HANDLE *threads);
 
 void ForceCloseHandle(HANDLE handle);
 
+void HandleOponentTurn(game_board *board, char *message);
+
 #endif
