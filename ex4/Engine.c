@@ -252,7 +252,6 @@ BOOL HandlePlayCommand(data_communication *communication, data_ui *ui, game_boar
 {
 	int dice_result;
 	char message[MAX_COMMAND_LENGTH];
-	char broadcast_message[MAX_COMMAND_LENGTH];
 	DWORD lock_result;
 	BOOL is_game_ended = FALSE;
 
@@ -268,7 +267,6 @@ BOOL HandlePlayCommand(data_communication *communication, data_ui *ui, game_boar
 	}
 
 	memset(message, '\0', MAX_COMMAND_LENGTH);
-	memset(broadcast_message, '\0', MAX_COMMAND_LENGTH);
 
 	//Rolls the dice to random number between 1 - 6
 	dice_result = (double)rand() / (RAND_MAX + 1) * (MAX_DICE_VALUE - MIN_DICE_VALUE)  
@@ -281,18 +279,17 @@ BOOL HandlePlayCommand(data_communication *communication, data_ui *ui, game_boar
 		communication->game_piece, communication->username, dice_result);
 	printf("%s", message);
 	
-	sprintf(broadcast_message, "broadcast %s", message);
 	//Updates the server about the play
-	if (SendMessageToServer(communication->socket, broadcast_message) == FALSE)
+	if (SendMessageToServer(communication->socket, message) == FALSE)
 		return TRUE; //Error occured when sending message to the server
 
 	if (is_game_ended == TRUE)
 	{
-		memset(broadcast_message, '\0', MAX_COMMAND_LENGTH);
-		sprintf(broadcast_message, "Player %s won the game. Congratulations.\n",
+		memset(message, '\0', MAX_COMMAND_LENGTH);
+		sprintf(message, "Player %s won the game. Congratulations.\n",
 			communication->username);
-		write_log_and_print("%s", broadcast_message);
-		if (SendMessageToServer(communication->socket, broadcast_message) == FALSE)
+		write_log_and_print("%s", message);
+		if (SendMessageToServer(communication->socket, message) == FALSE)
 			return TRUE; //Error occured when sending message to the server
 	}
 	ResetEvent(ui->PlayersTurnEvent);
@@ -308,7 +305,7 @@ BOOL HandleServerMessage(data_communication *communication, data_ui *ui, game_bo
 	if (strstr(communication->message, "Private message from") == NULL &&
 		strstr(communication->message, "Broadcast from") == NULL)
 	{
-		if(strcmp(communication->message, "Your turn to play.") == 0)
+		if(strcmp(communication->message, "Your turn to play.\n") == 0)
 			SetEvent(ui->PlayersTurnEvent);
 		else if (strstr(communication->message, "your game piece is") != NULL)
 		{
