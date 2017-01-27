@@ -16,7 +16,16 @@
 #define MAX_PLAYER_WON_MESSAGE_LENGTH 1000
 
 #define MAX_SIZE_OF_USERNAME_MESSAGE 41
-#define MAX_MESSAGE_SIZE 80
+#define MAX_USER_MESSAGE_LENGTH 80
 
+#define COMMAND_MESSAGE "message"
+#define COMMAND_PLAY "play"
+#define COMMAND_PLAYERS "players"
+#define COMMAND_BROADCAST "broadcast"
+
+#define CONNETION_REFUSED_MSG "Connection to server refused. Exiting."
+
+#define COMMAND_MESSAGE_MIN_ARGS 3
+#define COMMAND_BROADCAST_MIN_ARGS 2
 
 #endif

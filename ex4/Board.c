@@ -1,6 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include "Board.h"
 
+//Fills the board cells with their strigns
 void BasicBoardFill(int i, cell *data)
 {
 	char temp[SIZE_OF_INT];
@@ -24,25 +25,34 @@ void BasicBoardFill(int i, cell *data)
 		strcat(data->value, " ");
 	}
 }
+
+//Update the cell to be snake head
 void UpdateSnakeHead(cell *curr, int dest)
 {
 	curr->value[POS_IN_STRING_OF_S]='v';
 	curr->destination_cell=dest-1;
 }
+
+//Update the cell to be snake tail
 void UpdateSnaketail(cell *curr)
 {
 	curr->value[POS_IN_STRING_OF_S]='_';
 }
+
+//Update the cell to be ladder head
 void UpdateLadderHead(cell *curr)
 {
 	curr->value[POS_IN_STRING_OF_L]='=';
 }
+
+//Update the cell to be ladder tail
 void UpdateLadderTail(cell *curr, int dest)
 {
 	curr->value[POS_IN_STRING_OF_L]='^';
 	curr->destination_cell=dest-1;
 }
 
+//Prints a line seperator
 void PrintLineSeperator() 
 {
 	int i;
@@ -50,6 +60,8 @@ void PrintLineSeperator()
 		printf("-");
 	printf("\n");
 }
+
+//Prints a cell
 void PrintCell(cell cur_cell)
 {
 	int j;
@@ -86,6 +98,8 @@ void PrintCell(cell cur_cell)
 	}
 	printf("|");
 }
+
+//Prints a board line
 void PrintBoardLine(cell board[], int line)
 {
 	int i;
@@ -106,6 +120,7 @@ void PrintBoardLine(cell board[], int line)
 		end = start - NUM_OF_CELLS_IN_LINE;
 		factor = -1;
 	}
+
 	printf("|");
 	for (i=start; i!=end; i+=factor)
 	{
@@ -115,6 +130,7 @@ void PrintBoardLine(cell board[], int line)
 	PrintLineSeperator();
 }
 
+//Print the whole board
 void PrintBoard(game_board *board)
 {
 	int i;
@@ -126,6 +142,7 @@ void PrintBoard(game_board *board)
 	}
 }
 
+//Build the board
 void BuildBoard(game_board *board)
 {
 	int i;
@@ -148,6 +165,7 @@ void BuildBoard(game_board *board)
 	}
 }
 
+//Updates the board on a game_piece dice_result
 BOOL UpdateBoard(game_board *board, char game_piece, int dice_result) 
 {
 	int location;

@@ -16,16 +16,20 @@
 
 #define MIN_DICE_VALUE 1
 #define MAX_DICE_VALUE 6
+#define NUMBER_OF_THREADS 2
+#define GAME_PIECE_POSITION_FROM_END 2
+#define DICE_RESULT_POSITION 2
+#define GAME_PIECE_POSITION_IN_DREW_COMMAND 7
 
-void RunClientCommunicationThread(data_communication *communication);
+HANDLE RunClientCommunicationThread(data_communication *communication);
 
-void RunUiThread(data_ui *ui);
+HANDLE RunUiThread(data_ui *ui);
 
-void ReceivedUserMessage(data_communication *communication, data_ui *ui, game_board *board);
+BOOL ReceivedUserMessage(data_communication *communication, data_ui *ui, game_board *board);
 
-void HandleServerMessage(data_communication *communication, data_ui *ui, game_board *board);
+BOOL HandleServerMessage(data_communication *communication, data_ui *ui, game_board *board);
 
-void ConnectToServer(data_communication *communication);
+BOOL ConnectToServer(data_communication *communication);
 
 BOOL SendMessageToServer(SOCKET socket, char *message);
 
@@ -33,14 +37,16 @@ int NumOfArgInCommand(char *command);
 
 BOOL CheckIfMessageValid(char *message);
 
-BOOL CheckIfUserNameValid(char *user_name);
+BOOL HandleMessageCommand(char *command, int num_of_args, SOCKET socket);
 
-void HandleMessageCommand(char *command, int num_of_args, SOCKET socket);
+BOOL HandleBroadcastCommand(char *command, int num_of_args, SOCKET socket);
 
-void HandleBroadcastCommand(char *command, int num_of_args, SOCKET socket);
+BOOL HandlePlayCommand(data_communication *communication, data_ui *ui, game_board *board);
 
-void HandlePlayCommand(data_communication *communication, data_ui *ui, game_board *board);
+void RunClient(int port, char *username);
 
-void RunClient();
+void ExitGame(data_communication *communication, data_ui *ui, HANDLE *threads);
+
+void ForceCloseHandle(HANDLE handle);
 
 #endif
