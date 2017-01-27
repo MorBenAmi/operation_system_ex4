@@ -36,8 +36,8 @@ BOOL HandleIncomingMessage(communication_data* data)
 
 	lock_mutex(HANDLE_INCOMING_MESSAGE_MUTEX);
 
-	printf("Received message from user: %s, message: %s\n", data->username, data->message);
-	write_log("Received message from user: %s, message: %s\n", data->username, data->message);
+	printf("Received message from user: %s, message: %s", data->username, data->message);
+	write_log("Received message from user: %s, message: %s", data->username, data->message);
 
 	if(strstr(data->message, "message") == data->message)
 	{
