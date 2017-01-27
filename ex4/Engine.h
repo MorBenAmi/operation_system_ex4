@@ -18,7 +18,7 @@
 #define MAX_DICE_VALUE 6
 #define NUMBER_OF_THREADS 2
 #define GAME_PIECE_POSITION_FROM_END 2
-#define DICE_RESULT_POSITION 2
+#define DICE_RESULT_POSITION 3
 #define GAME_PIECE_POSITION_IN_DREW_COMMAND 7
 
 HANDLE RunClientCommunicationThread(data_communication *communication);
