@@ -419,7 +419,7 @@ void ExitGame(data_communication *communication, data_ui *ui, HANDLE *threads)
 	ForceCloseHandle(ui->PlayersTurnEvent);
 	//Close sockets
 	if (communication->socket != NULL)
-		closesocket(communication->socket);
+		close_socket(communication->socket);
 	//Exit
 	exit(GetLastError());
 }

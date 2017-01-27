@@ -55,6 +55,16 @@ BOOL sock_listen(int port, int max_connections, SOCKET* listen_sock)
 
 void close_socket(SOCKET sock)
 {
+	char buffer[2];
+	int result = 0;
+
+	shutdown(sock, SD_SEND);
+
+	do
+	{
+		result = recv(sock, buffer, 1,0);
+	} while( result > 0);
+
 	closesocket(sock);
 }
 
@@ -89,12 +99,12 @@ BOOL receive_from_socket(SOCKET socket, char* buffer)
 	while (1)  
 	{
 		/* send does not guarantee that the entire message is sent */
-		bytes_just_transferred = recv(socket, cur_place_ptr, MAX_COMMAND_LENGTH, 0);
+		bytes_just_transferred = recv(socket, cur_place_ptr, 1, 0);
 		while(WSAGetLastError() == WSAEWOULDBLOCK) //when the socket is nonblocking: no data available yet
 		{
 			WSASetLastError(0);
 			Sleep(100);
-			bytes_just_transferred = recv(socket, cur_place_ptr, MAX_COMMAND_LENGTH, 0);
+			bytes_just_transferred = recv(socket, cur_place_ptr, 1, 0);
 		}
 		if (bytes_just_transferred == SOCKET_ERROR) 
 		{
