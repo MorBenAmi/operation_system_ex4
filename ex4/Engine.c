@@ -269,8 +269,7 @@ BOOL HandlePlayCommand(data_communication *communication, data_ui *ui, game_boar
 	memset(message, '\0', MAX_COMMAND_LENGTH);
 
 	//Rolls the dice to random number between 1 - 6
-	dice_result = (double)rand() / (RAND_MAX + 1) * (MAX_DICE_VALUE - MIN_DICE_VALUE)  
-        + MIN_DICE_VALUE;
+	dice_result = (((double)rand() / (RAND_MAX + 1)) * (MAX_DICE_VALUE - MIN_DICE_VALUE + 1)) + MIN_DICE_VALUE;
 	//Updating the board
 	is_game_ended = UpdateBoard(board, communication->game_piece, dice_result); 
 	PrintBoard(board);
