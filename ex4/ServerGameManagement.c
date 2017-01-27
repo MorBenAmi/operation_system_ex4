@@ -31,8 +31,12 @@ void start_server(int port)
 		return;
 	}
 
-	//todo: play the game? do some magic to know when message arrives... or when the game is finished..
-	PlayGame(users, user_sockets, symbols, players_communication_data);
+	if(PlayGame(users, user_sockets, symbols, all_threads_must_end_event) == FALSE)
+	{
+		write_log("Faile to play game, Error_code: 0x%x\n", GetLastError());
+		CloseConnections(user_sockets);
+		return;
+	}
 
 	while(players_communication_thread[num_of_threads] != NULL)
 		num_of_threads++;
@@ -138,6 +142,7 @@ BOOL WaitForPlayers(int port, SOCKET user_sockets[MAX_NUM_OF_PLAYERS],
 		memset(players_communications[connected_users_count].message, '\0', MAX_COMMAND_LENGTH);
 		players_communications[connected_users_count].all_users_sockets = user_sockets;
 		players_communications[connected_users_count].all_users = users;
+		players_communications[connected_users_count].all_symbols = symbols;
 		players_communications[connected_users_count].all_threads_must_end_event = all_threads_must_end_event;
 
 		players_communication_thread[connected_users_count] = CreateThread(NULL, 0, ServerCommunicationThreadStart, &(players_communications[connected_users_count]), 0, NULL);
@@ -189,7 +194,7 @@ BOOL PlayGame(char users[MAX_NUM_OF_PLAYERS][MAX_USER_NAME_LENGTH], SOCKET user_
 
 	while(1)
 	{
-		if(ShouldFinishExecution(all_threads_must_end_event) == FALSE)
+		if(ShouldFinishExecution(all_threads_must_end_event) == TRUE)
 			return FALSE;
 
 		lock_mutex(BROADCAST_MUTEX);
@@ -209,14 +214,16 @@ BOOL PlayGame(char users[MAX_NUM_OF_PLAYERS][MAX_USER_NAME_LENGTH], SOCKET user_
 			if(i != current_player)
 			{
 				if(write_to_socket(user_sockets[i], player_turn_message) == FALSE)
+				{
 					unlock_mutex(BROADCAST_MUTEX);
 					return FALSE;
+				}
 			}
 		}
 
 		unlock_mutex(BROADCAST_MUTEX);
 
-		wait_result = WaitForMultipleObjects(num_of_players + 2, wait_handles, FALSE, INFINITE);
+		wait_result = WaitForMultipleObjects(3, wait_handles, FALSE, INFINITE);
 		switch(wait_result)
 		{
 			case WAIT_OBJECT_0: // Turn Finished
@@ -279,21 +286,17 @@ BOOL BroadcastPlayers(SOCKET user_sockets[MAX_NUM_OF_PLAYERS], char users[MAX_NU
 BOOL SendPlayersToUser(SOCKET user_sock, SOCKET user_sockets[MAX_NUM_OF_PLAYERS], char users[MAX_NUM_OF_PLAYERS][MAX_USER_NAME_LENGTH], char symbols[MAX_NUM_OF_PLAYERS])
 {
 	char players_message[MAX_PLAYERS_LIST_MESSAGE_LENGTH];
-	char user_symbol[2];
 	int i = 0;
+	int j = 0;
 
-	memset(user_symbol, '\0', 2);
 	memset(players_message, '\0', MAX_PLAYERS_LIST_MESSAGE_LENGTH);
 	for(i = 0; i < MAX_NUM_OF_PLAYERS; i++)
 	{
 		if(user_sockets[i] != INVALID_SOCKET)
 		{
-			user_symbol[0] = symbols[i];
 			if(i > 0)
-				strcat(players_message, ",");
-			strcat(players_message, users[i]);
-			strcat(players_message, "-");
-			strcat(players_message, user_symbol);
+				j += sprintf(players_message + j, ",");
+			j += sprintf(players_message + j, "%s-%c", users[i], symbols[i]);
 		}
 	}
 	strcat(players_message, ".\n");
