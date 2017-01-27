@@ -7,7 +7,7 @@ void ReadFromClient(char *command);
 DWORD WINAPI RunUiManager(LPVOID lpParam)
 {
 	data_ui *data = (data_ui *)lpParam;
-	InitEvent(&data->PlayersTurnEvent, "PlayersTurnEvent");
+	data->PlayersTurnEvent = InitEvent("PlayersTurnEvent");
 	while (1) 
 	{
 		ReadFromClient(data->command);
