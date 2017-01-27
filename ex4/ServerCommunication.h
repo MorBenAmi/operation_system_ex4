@@ -16,6 +16,7 @@ typedef struct communication_data
 	char symbol;
 
 	char (*all_users)[MAX_USER_NAME_LENGTH];
+	char *all_symbols;
 	SOCKET* all_users_sockets;
 	HANDLE all_threads_must_end_event;
 } communication_data;
@@ -31,5 +32,7 @@ BOOL HandleSendMessage(communication_data* data);
 BOOL HandlePlayerTurnMessage(communication_data* data);
 
 BOOL HandlePlayerWonMessage(communication_data* data);
+
+BOOL HandlePlayersMessage(communication_data* data);
 
 BOOL ShouldFinishThread(HANDLE all_threads_must_end_event);

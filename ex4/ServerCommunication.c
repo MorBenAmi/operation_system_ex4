@@ -32,7 +32,7 @@ void StartServerCommunication(communication_data* data)
 
 BOOL HandleIncomingMessage(communication_data* data)
 {
-	BOOL handle_result;
+	BOOL handle_result = TRUE;
 
 	lock_mutex(HANDLE_INCOMING_MESSAGE_MUTEX);
 
@@ -41,23 +41,36 @@ BOOL HandleIncomingMessage(communication_data* data)
 
 	if(strstr(data->message, "message") == data->message)
 	{
+		lock_mutex(BROADCAST_MUTEX);
 		handle_result = HandleSendMessage(data);
+		unlock_mutex(BROADCAST_MUTEX);
 	}
 	else if(strstr(data->message, "broadcast") == data->message)
 	{
+		lock_mutex(BROADCAST_MUTEX);
 		handle_result = HandleBroadcastMessage(data);
+		unlock_mutex(BROADCAST_MUTEX);
 	}
 	else if(strstr(data->message, "players") == data->message)
 	{
-		//players
-		//todo: send players
+		lock_mutex(BROADCAST_MUTEX);
+		handle_result = HandlePlayersMessage(data);
+		unlock_mutex(BROADCAST_MUTEX);
 	}
 	else if(strstr(data->message, "Player") == data->message)
 	{
 		if(strstr(data->message, "drew") != NULL)
+		{
+			lock_mutex(BROADCAST_MUTEX);
 			handle_result = HandlePlayerTurnMessage(data);
+			unlock_mutex(BROADCAST_MUTEX);
+		}
 		else if(strstr(data->message, "won") != NULL)
+		{
+			lock_mutex(BROADCAST_MUTEX);
 			handle_result = HandlePlayeWonMessage(data);
+			unlock_mutex(BROADCAST_MUTEX);
+		}
 		else
 		{
 			//todo: unknown message.. ignore?
@@ -96,6 +109,7 @@ BOOL HandleSendMessage(communication_data* data)
 			write_log("Private message sent from %s to %s: %s\n", data->username, username, message);
 			if(write_to_socket(data->all_users_sockets[i], private_message) == FALSE)
 				return FALSE;
+
 			return TRUE;
 		}
 	}
@@ -106,6 +120,7 @@ BOOL HandleSendMessage(communication_data* data)
 	write_log(user_not_exist_message);
 	if(write_to_socket(data->socket, user_not_exist_message) == FALSE)
 		return FALSE;
+
 	return TRUE;
 }
 
@@ -189,9 +204,31 @@ BOOL HandlePlayeWonMessage(communication_data* data)
 		write_log("Failed to create PlayerWon Event");
 		return FALSE;
 	}
-
 	SetEvent(won_event);
 	return TRUE;
+}
+
+BOOL HandlePlayersMessage(communication_data* data)
+{
+	char players_message[MAX_PLAYERS_LIST_MESSAGE_LENGTH];
+	int i = 0;
+	int j = 0;
+	BOOL send_result;
+
+	memset(players_message, '\0', MAX_PLAYERS_LIST_MESSAGE_LENGTH);
+	for(i = 0; i < MAX_NUM_OF_PLAYERS; i++)
+	{
+		if(data->all_users_sockets[i] != INVALID_SOCKET)
+		{
+			if(i > 0)
+				j += sprintf(players_message + j, ",");
+			j += sprintf(players_message + j, "%s-%c", data->all_users[i], data->all_symbols[i]);
+		}
+	}
+	strcat(players_message, ".\n");
+	send_result = write_to_socket(data->socket, players_message);
+
+	return send_result;
 }
 
 BOOL ShouldFinishThread(HANDLE all_threads_must_end_event)
