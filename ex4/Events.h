@@ -5,6 +5,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-BOOL InitEvent(HANDLE *evnt, char *event_name);
+HANDLE InitEvent(char *event_name);
 
 #endif
