@@ -15,7 +15,7 @@
 #define LINE_SIZE 71
 #define NUM_OF_CELLS_IN_LINE 10
 
-#define GAME_PIECES "!@#$"
+#define GAME_PIECES "@#%*"
 
 typedef struct cell
 {
