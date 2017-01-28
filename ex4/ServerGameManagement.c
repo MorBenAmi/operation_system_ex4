@@ -111,7 +111,6 @@ BOOL WaitForPlayers(int port, SOCKET user_sockets[MAX_NUM_OF_PLAYERS],
 
 		if(IsUsernameExists(users[connected_users_count], users, connected_users_count) == TRUE)
 		{
-			//todo: write to socke that the username is already exist..
 			write_to_socket(user_sockets[connected_users_count], "Cannot accept connection. Username already exists\n");
 			close_socket(user_sockets[connected_users_count]);			
 			user_sockets[connected_users_count] = INVALID_SOCKET;
@@ -304,14 +303,14 @@ BOOL SendPlayersToUser(SOCKET user_sock, SOCKET user_sockets[MAX_NUM_OF_PLAYERS]
 void CloseConnections(SOCKET user_sockets[MAX_NUM_OF_PLAYERS])
 {
 	int i =0;
+
+	lock_mutex(BROADCAST_MUTEX);
 	for(i = 0; i<MAX_NUM_OF_PLAYERS; i++)
 	{
 		if(user_sockets[i] != INVALID_SOCKET)
-		{
-			write_to_socket(user_sockets[i], "Close Connection\n");
 			close_socket(user_sockets[i]);
-		}
 	}
+	unlock_mutex(BROADCAST_MUTEX);
 }
 
 BOOL ReceiveUsername(SOCKET user_sock, char username[MAX_USER_NAME_LENGTH])
