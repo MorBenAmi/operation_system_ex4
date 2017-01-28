@@ -8,6 +8,9 @@
 #include "ServerGameManagement.h"
 #include "Log.h"
 #include "SocketWrapper.h"
+#define SERVER_MODE "server"
+#define CLIENT_MODE "client"
+
 
 /*oOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoO*/
 int main(int argc, char* argv[])
@@ -21,18 +24,18 @@ int main(int argc, char* argv[])
 	log_path = argv[2];
 	port = atoi(argv[3]);
 
-	open_log(log_path); //todo: maybe need to change how log works because its uses Global variables
-	//We will need to send it to the client/server
+	open_log(log_path); 
 
 	if(init_WSA() == FALSE)
 	{
 		printf("Failed to init WSA, Error_Code: 0x%x\n", GetLastError());
 	}
-	if(strcmp(mode,"server") == 0)
+
+	if(strcmp(mode,SERVER_MODE) == 0)
 	{
 		start_server(port);
 	}
-	else if(strcmp(mode,"client") == 0)
+	else if(strcmp(mode, CLIENT_MODE) == 0)
 	{
 		username = argv[4];
 		RunClient(port, username);
