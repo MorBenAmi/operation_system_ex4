@@ -3,17 +3,17 @@
 
 #define MAX_USER_NAME_LENGTH 31 // including \0
 #define MAX_NUM_OF_PLAYERS 4
-#define MAX_USER_NAME_MESSAGE_LENGTH 100 //todo: change it to the right length! including \n
-#define MAX_WELCOME_MESSAGE_LENGTH 100 //todo: change it to the right length! including \n
-#define MAX_PLAYER_JOINED_MESSAGE_LENGTH 100 //todo: change it to the right length! including \n
-#define MAX_PLAYERS_LIST_MESSAGE_LENGTH 100 //todo: change it to the right length! including \n
-#define MAX_COMMAND_LENGTH 1000 //todo: change to real value
-#define MAX_PRIVATE_MESSAGE_LENGTH 1000 //todo: change to real value
-#define MAX_BROADCAST_MESSAGE_LENGTH 1000 //todo: change to real value
-#define MAX_USER_NOT_EXIST_MESSAGE_LENGTH 1000 //todo: change to real value
-#define MAX_PLAYER_TURN_MESSAGE_LENGTH 1000
-#define MAX_PLAYER_DREW_MESSAGE_LENGTH 1000
-#define MAX_PLAYER_WON_MESSAGE_LENGTH 1000
+#define MAX_USER_NAME_MESSAGE_LENGTH (10+MAX_USER_NAME_LENGTH) //username=<username>\n
+#define MAX_WELCOME_MESSAGE_LENGTH (MAX_USER_NAME_LENGTH+20) // <username> you game piece is <game piece>\n
+#define MAX_PLAYER_JOINED_MESSAGE_LENGTH (35+MAX_USER_NAME_LENGTH) // New player joined the game: <username> <game piece>\n
+#define MAX_PLAYERS_LIST_MESSAGE_LENGTH (MAX_NUM_OF_PLAYERS*(MAX_USER_NAME_LENGTH + 4) + 1) // <user1>-<game_piece>, <user2>-<game_piece>, <user3>-<game_piece>, <user4>-<game_piece>.\n
+#define MAX_USER_NOT_EXIST_MESSAGE_LENGTH (MAX_USER_NAME_LENGTH+35) // User <username> doesn't exist in the game.\n
+#define MAX_PLAYER_TURN_MESSAGE_LENGTH (MAX_USER_NAME_LENGTH+30) // It is now <username>'s turn to play.\n
+
+#define MAX_PRIVATE_MESSAGE_LENGTH 1000
+#define MAX_BROADCAST_MESSAGE_LENGTH 1000
+
+#define MAX_COMMAND_LENGTH 1000
 
 #define MAX_SIZE_OF_USERNAME_MESSAGE 41
 #define MAX_USER_MESSAGE_LENGTH 80

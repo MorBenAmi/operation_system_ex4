@@ -33,7 +33,7 @@ void start_server(int port)
 
 	if(PlayGame(users, user_sockets, symbols, all_threads_must_end_event) == FALSE)
 	{
-		write_log("Faile to play game, Error_code: 0x%x\n", GetLastError());
+		write_log("Failed to play game, Error_code: 0x%x\n", GetLastError());
 		CloseConnections(user_sockets);
 		return;
 	}
@@ -55,8 +55,6 @@ BOOL WaitForPlayers(int port, SOCKET user_sockets[MAX_NUM_OF_PLAYERS],
 	int connected_users_count = 0;
 	time_t start_time;
 	time_t stop_time;
-	char server_welcome_message[MAX_WELCOME_MESSAGE_LENGTH];
-	char player_joined_message[MAX_PLAYER_JOINED_MESSAGE_LENGTH];
 	char player_symbol[2];
 	
 	for(i = 0; i < MAX_NUM_OF_PLAYERS; i++)
@@ -295,7 +293,7 @@ BOOL SendPlayersToUser(SOCKET user_sock, SOCKET user_sockets[MAX_NUM_OF_PLAYERS]
 		if(user_sockets[i] != INVALID_SOCKET)
 		{
 			if(i > 0)
-				j += sprintf(players_message + j, ",");
+				j += sprintf(players_message + j, ", ");
 			j += sprintf(players_message + j, "%s-%c", users[i], symbols[i]);
 		}
 	}

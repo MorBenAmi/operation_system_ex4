@@ -24,6 +24,7 @@ void StartServerCommunication(communication_data* data)
 				return;
 			}
 			write_log_and_print("Error while receiving message from user: %s, ErrorCode: 0x%x\n", data->username, GetLastError());
+			SetEvent(data->all_threads_must_end_event);
 			return;
 		}
 
@@ -121,7 +122,7 @@ BOOL HandleSendMessage(communication_data* data)
 
 	//user not exist..
 	memset(user_not_exist_message, '\0', MAX_USER_NOT_EXIST_MESSAGE_LENGTH);
-	sprintf(user_not_exist_message, "User %s  doesn't exist in the game.\n", username);
+	sprintf(user_not_exist_message, "User %s doesn't exist in the game.\n", username);
 	write_log(user_not_exist_message);
 	if(write_to_socket(data->socket, user_not_exist_message) == FALSE)
 		return FALSE;
@@ -136,7 +137,6 @@ BOOL HandleBroadcastMessage(communication_data* data)
 	char *message = NULL;
 	int i = 0;
 	char broadcast_message[MAX_BROADCAST_MESSAGE_LENGTH];
-	char user_not_exist_message[MAX_USER_NOT_EXIST_MESSAGE_LENGTH];
 
 	command_name = strtok(data->message, " ");
 	message = strtok(NULL, "\n");
@@ -226,7 +226,7 @@ BOOL HandlePlayersMessage(communication_data* data)
 		if(data->all_users_sockets[i] != INVALID_SOCKET)
 		{
 			if(i > 0)
-				j += sprintf(players_message + j, ",");
+				j += sprintf(players_message + j, ", ");
 			j += sprintf(players_message + j, "%s-%c", data->all_users[i], data->all_symbols[i]);
 		}
 	}
