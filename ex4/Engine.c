@@ -304,7 +304,7 @@ BOOL HandleServerMessage(data_communication *communication, data_ui *ui, game_bo
 	if (strstr(communication->message, "Private message from") == NULL &&
 		strstr(communication->message, "Broadcast from") == NULL)
 	{
-		if(strcmp(communication->message, "Your turn to play.\n") == 0)
+		if (strcmp(communication->message, "Your turn to play.\n") == 0)
 			SetEvent(ui->PlayersTurnEvent);
 		else if (strstr(communication->message, "your game piece is") != NULL)
 		{
@@ -319,6 +319,8 @@ BOOL HandleServerMessage(data_communication *communication, data_ui *ui, game_bo
 			return TRUE;
 		else if (strstr(communication->message, CONNETION_REFUSED_MSG) != NULL)
 			return TRUE; //Connection refused. Exiting...
+		else if (strstr(communication->message, "Cannot accept connection. Username already exists") != NULL)
+			return TRUE; //Username doens't exist
 	}
 	//Finish handling the message from the server
 	ReleaseSemaphoreSimple(communication->EngineDoneWithServerMessageSemaphore);
