@@ -196,6 +196,7 @@ BOOL PlayGame(char users[MAX_NUM_OF_PLAYERS][MAX_USER_NAME_LENGTH], SOCKET user_
 
 		lock_mutex(BROADCAST_MUTEX);
 
+		write_log("Your turn to play.\n");
 		if(write_to_socket(user_sockets[current_player], "Your turn to play.\n") == FALSE)
 		{
 			write_log("Failed to write to socket, Error_code: 0x%x\n", GetLastError());
@@ -276,7 +277,7 @@ BOOL BroadcastPlayers(SOCKET user_sockets[MAX_NUM_OF_PLAYERS], char users[MAX_NU
 		}
 	}
 	unlock_mutex(BROADCAST_MUTEX);
-	write_log("Players' game pieces' selection broadcasted to all users.");
+	write_log("Players' game pieces' selection broadcasted to all users.\n");
 	return TRUE;
 }
 
