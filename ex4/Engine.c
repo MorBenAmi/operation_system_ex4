@@ -62,11 +62,12 @@ void RunClient(int port, char *username)
 				break;
 				//If thread 1 finished, receive server msg
 			case WAIT_OBJECT_0 + 1:
-				if (HandleServerMessage(&communication, &ui, &board) == TRUE)
-					ExitGame(&communication, &ui, threads);
 				//Error occured while reading from the server
 				if (communication.communication_error == TRUE)
 					ExitGame(&communication, &ui, threads);
+				else if (HandleServerMessage(&communication, &ui, &board) == TRUE)
+					ExitGame(&communication, &ui, threads);
+				
 				break;
 		}
 	}
@@ -304,7 +305,7 @@ BOOL HandleServerMessage(data_communication *communication, data_ui *ui, game_bo
 	if (strstr(communication->message, "Private message from") == NULL &&
 		strstr(communication->message, "Broadcast from") == NULL)
 	{
-		if(strcmp(communication->message, "Your turn to play.\n") == 0)
+		if (strcmp(communication->message, "Your turn to play.\n") == 0)
 			SetEvent(ui->PlayersTurnEvent);
 		else if (strstr(communication->message, "your game piece is") != NULL)
 		{
@@ -319,6 +320,8 @@ BOOL HandleServerMessage(data_communication *communication, data_ui *ui, game_bo
 			return TRUE;
 		else if (strstr(communication->message, CONNETION_REFUSED_MSG) != NULL)
 			return TRUE; //Connection refused. Exiting...
+		else if (strstr(communication->message, "Cannot accept connection. Username already exists") != NULL)
+			return TRUE; //Username doens't exist
 	}
 	//Finish handling the message from the server
 	ReleaseSemaphoreSimple(communication->EngineDoneWithServerMessageSemaphore);

@@ -175,7 +175,7 @@ BOOL UpdateBoard(game_board *board, char game_piece, int dice_result)
 	if (location > 0)
 		board->cells[location].players_in_cell[player_index] = FALSE;
 	location += dice_result;
-	if (location >= BOARD_SIZE)
+	if (location >= (BOARD_SIZE - 1))
 	{
 		return TRUE;
 	}
