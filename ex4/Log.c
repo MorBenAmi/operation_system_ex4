@@ -2,6 +2,7 @@
 #include <windows.h>
 #include <stdarg.h>
 #include "Mutex.h"
+#include "MutexConstants.h"
 #include "Log.h"
 
 static FILE* log_file;
@@ -33,16 +34,26 @@ void close_log()
 	close_mutex("LogFile");
 }
 
-void write_log(_In_z_ _Printf_format_string_ const char * _Format, ...)
+void write_log(const char* message)
+{
+	if(log_file == NULL)
+		return;
+
+	lock_mutex(LOG_MUTEX);
+	fputs(message, log_file);
+	unlock_mutex(LOG_MUTEX);
+}
+
+void write_log_format(_In_z_ _Printf_format_string_ const char * _Format, ...)
 {
 	va_list args;
 	if(log_file == NULL)
 		return;
     va_start(args, _Format);
 	
-	lock_mutex("LogFile");
+	lock_mutex(LOG_MUTEX);
     vfprintf(log_file, _Format, args);
-	unlock_mutex("LogFile");
+	unlock_mutex(LOG_MUTEX);
 	
     va_end(args);
 }
@@ -54,10 +65,10 @@ void write_log_and_print(_In_z_ _Printf_format_string_ const char * _Format, ...
 		return;
     va_start(args, _Format);
 	
-	lock_mutex("LogFile");
+	lock_mutex(LOG_MUTEX);
     vfprintf(log_file, _Format, args);
 	vprintf(_Format, args);
-	unlock_mutex("LogFile");
+	unlock_mutex(LOG_MUTEX);
 	
 	va_end(args);
 }

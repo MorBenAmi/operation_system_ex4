@@ -298,7 +298,7 @@ BOOL HandlePlayCommand(data_communication *communication, data_ui *ui, game_boar
 //Handles the msgs received from the server. returns TRUE if the game ended
 BOOL HandleServerMessage(data_communication *communication, data_ui *ui, game_board *board)
 {
-	write_log("Received from server: %s", communication->message);
+	write_log_format("Received from server: %s", communication->message);
 	printf("%s", communication->message);
 
 	if (strstr(communication->message, "Private message from") == NULL &&
@@ -342,7 +342,7 @@ void HandleOponentTurn(game_board *board, char *message)
 BOOL SendMessageToServer(SOCKET socket, char *message)
 {
 	BOOL result;
-	write_log("Sent to server: %s", message);
+	write_log_format("Sent to server: %s", message);
 	result = write_to_socket(socket, message); 
 	if (result == FALSE)
 	{

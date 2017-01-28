@@ -14,8 +14,7 @@ HANDLE InitEvent(char *event_name)
 	evnt = CreateEvent(NULL, TRUE, FALSE, (LPCWSTR)unique_event_name);
 	if(evnt == NULL)
 	{
-		printf("ERROR in GetExitCodeProcess function\n");
-		write_log("!!! ERROR in GetExitCodeProcess function. Error code: 0x%x !!!\n", GetLastError()); 
+		write_log_and_print("!!! ERROR in CreateEvent function. Error code: 0x%x !!!\n", GetLastError()); 
 		return FALSE;
 	}
 	SetLastError(last_error);

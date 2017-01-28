@@ -4,4 +4,6 @@
 
 #define BROADCAST_MUTEX "BroadcastMutex"
 
+#define LOG_MUTEX "LogMutex"
+
 #define HANDLE_INCOMING_MESSAGE_MUTEX "HandleIncomingMessageMutex"

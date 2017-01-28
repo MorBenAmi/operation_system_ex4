@@ -13,7 +13,7 @@ void start_server(int port)
 	all_threads_must_end_event = InitEvent("AllThreadsMustEnd");
 	if(all_threads_must_end_event == NULL)
 	{
-		write_log("Failed to create event!. Error_code: 0x%x\n", GetLastError());
+		write_log_and_print("Failed to create event!. Error_code: 0x%x\n", GetLastError());
 		return;
 	}
 
@@ -26,14 +26,14 @@ void start_server(int port)
 	WriteToLogOrderOfPlayers(user_sockets, users, symbols); 
 	if(BroadcastPlayers(user_sockets, users, symbols) == FALSE)
 	{
-		write_log("Failed to send players list to all players, Error_code: 0x%x\n", GetLastError());
+		write_log_and_print("Failed to send players list to all players, Error_code: 0x%x\n", GetLastError());
 		CloseConnections(user_sockets);
 		return;
 	}
 
 	if(PlayGame(users, user_sockets, symbols, all_threads_must_end_event) == FALSE)
 	{
-		write_log("Failed to play game, Error_code: 0x%x\n", GetLastError());
+		write_log_and_print("Failed to play game, Error_code: 0x%x\n", GetLastError());
 		CloseConnections(user_sockets);
 		return;
 	}
@@ -65,8 +65,7 @@ BOOL WaitForPlayers(int port, SOCKET user_sockets[MAX_NUM_OF_PLAYERS],
 
 	if(sock_listen(port, MAX_NUM_OF_PLAYERS, &listen_sock) == FALSE)
 	{
-		printf("Failed on listening port:%d, Error_code: 0x%x\n",port, GetLastError());
-		write_log("Failed on listening port:%d, Error_code: 0x%x\n",port, GetLastError());
+		write_log_and_print("Failed on listening port:%d, Error_code: 0x%x\n",port, GetLastError());
 		return FALSE;
 	}
 
@@ -81,8 +80,7 @@ BOOL WaitForPlayers(int port, SOCKET user_sockets[MAX_NUM_OF_PLAYERS],
 			{
 				if(i == 0)
 				{
-					printf("No players connected, exiting...\n");
-					write_log("No players connected, exiting...\n");
+					write_log_and_print("No players connected, exiting...\n");
 					close_socket(listen_sock);
 					return FALSE;
 				}
@@ -111,6 +109,7 @@ BOOL WaitForPlayers(int port, SOCKET user_sockets[MAX_NUM_OF_PLAYERS],
 
 		if(IsUsernameExists(users[connected_users_count], users, connected_users_count) == TRUE)
 		{
+			write_log_format("Cannot accept connection. Username(%s) already exists\n", users[connected_users_count]);
 			write_to_socket(user_sockets[connected_users_count], "Cannot accept connection. Username already exists\n");
 			close_socket(user_sockets[connected_users_count]);			
 			user_sockets[connected_users_count] = INVALID_SOCKET;
@@ -145,8 +144,7 @@ BOOL WaitForPlayers(int port, SOCKET user_sockets[MAX_NUM_OF_PLAYERS],
 		players_communication_thread[connected_users_count] = CreateThread(NULL, 0, ServerCommunicationThreadStart, &(players_communications[connected_users_count]), 0, NULL);
 		if(players_communication_thread[connected_users_count] == NULL)
 		{
-			printf("Failed to create ServerCommunicationThread for user: %s, ErrorCode: 0x%x\n", users[connected_users_count], GetLastError());
-			write_log("Failed to create ServerCommunicationThread for user: %s, ErrorCode: 0x%x\n", users[connected_users_count], GetLastError());
+			write_log_and_print("Failed to create ServerCommunicationThread for user: %s, ErrorCode: 0x%x\n", users[connected_users_count], GetLastError());
 			close_socket(listen_sock);
 			unlock_mutex(BROADCAST_MUTEX);
 			return FALSE;
@@ -178,13 +176,13 @@ BOOL PlayGame(char users[MAX_NUM_OF_PLAYERS][MAX_USER_NAME_LENGTH], SOCKET user_
 	wait_handles[0] = InitEvent("TurnFinished");
 	if(wait_handles[0] == NULL)
 	{
-		write_log("Failed creating TurnFinished Event, Error_code: 0x%x\n", GetLastError());
+		write_log_and_print("Failed creating TurnFinished Event, Error_code: 0x%x\n", GetLastError());
 		return FALSE;
 	}
 	wait_handles[1] = InitEvent("PlayerWon");
 	if(wait_handles[1] == NULL)
 	{
-		write_log("Failed creating PlayerWon Event, Error_code: 0x%x\n", GetLastError());
+		write_log_and_print("Failed creating PlayerWon Event, Error_code: 0x%x\n", GetLastError());
 		return FALSE;
 	}
 	wait_handles[2] = all_threads_must_end_event;
@@ -199,7 +197,7 @@ BOOL PlayGame(char users[MAX_NUM_OF_PLAYERS][MAX_USER_NAME_LENGTH], SOCKET user_
 		write_log("Your turn to play.\n");
 		if(write_to_socket(user_sockets[current_player], "Your turn to play.\n") == FALSE)
 		{
-			write_log("Failed to write to socket, Error_code: 0x%x\n", GetLastError());
+			write_log_and_print("Failed to write to socket, Error_code: 0x%x\n", GetLastError());
 			unlock_mutex(BROADCAST_MUTEX);
 			return FALSE;
 		}
@@ -234,7 +232,7 @@ BOOL PlayGame(char users[MAX_NUM_OF_PLAYERS][MAX_USER_NAME_LENGTH], SOCKET user_
 				return FALSE;
 				break;
 			default:
-				write_log("Unexpected wait result, result: %d, Error_code: 0x%x\n", wait_result, GetLastError());
+				write_log_and_print("Unexpected wait result, result: %d, Error_code: 0x%x\n", wait_result, GetLastError());
 				return FALSE;
 				break;
 		}
@@ -254,7 +252,7 @@ void WriteToLogOrderOfPlayers(SOCKET user_sockets[MAX_NUM_OF_PLAYERS], char user
 		{
 			if(i > 0)
 				write_log(",");
-			write_log("%s",users[i]);
+			write_log(users[i]);
 		}
 	}
 	write_log(".\n");
@@ -323,8 +321,7 @@ BOOL ReceiveUsername(SOCKET user_sock, char username[MAX_USER_NAME_LENGTH])
 	memset(username_message, '\0', MAX_USER_NAME_MESSAGE_LENGTH);
 	if(receive_from_socket(user_sock, username_message) == FALSE)
 	{
-		printf("Failed to receive username message, ErrorCode: 0x%x\n", GetLastError());
-		write_log("Failed to receive username message, ErrorCode: 0x%x\n", GetLastError());
+		write_log_and_print("Failed to receive username message, ErrorCode: 0x%x\n", GetLastError());
 		return FALSE;	
 	}
 
@@ -349,8 +346,7 @@ BOOL SendWelcomeMessage(SOCKET user_sock, char username[MAX_USER_NAME_LENGTH], c
 	write_log(server_welcome_message);
 	if(write_to_socket(user_sock, server_welcome_message) == FALSE)
 	{
-		printf("Failed to send game piece to user, Error_code: 0x%x\n",GetLastError());
-		write_log("Failed to send game piece to user, Error_code: 0x%x\n",GetLastError());
+		write_log_and_print("Failed to send game piece to user, Error_code: 0x%x\n",GetLastError());
 		return FALSE;
 	}
 	return TRUE;
@@ -369,8 +365,7 @@ BOOL BroadcastNewPlayerJoined(SOCKET user_sockets[MAX_NUM_OF_PLAYERS], int index
 	{
 		if(write_to_socket(user_sockets[i], player_joined_message) == FALSE)
 		{
-			printf("Failed to send player joined message! ErrorCode: 0x%x\n", GetLastError());
-			write_log("Failed to send player joined message! ErrorCode: 0x%x\n", GetLastError());
+			write_log_and_print("Failed to send player joined message! ErrorCode: 0x%x\n", GetLastError());
 			return FALSE;
 		}
 	}

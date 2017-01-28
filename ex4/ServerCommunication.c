@@ -87,7 +87,7 @@ BOOL HandleSendMessage(communication_data* data)
 		{
 			memset(private_message, '\0', MAX_PRIVATE_MESSAGE_LENGTH);
 			sprintf(private_message, "Private message from %s: %s\n", data->username, message);
-			write_log("Private message sent from %s to %s: %s\n", data->username, username, message);
+			write_log_format("Private message sent from %s to %s: %s\n", data->username, username, message);
 			if(write_to_socket(data->all_users_sockets[i], private_message) == FALSE)
 				return FALSE;
 
@@ -116,9 +116,9 @@ BOOL HandleBroadcastMessage(communication_data* data)
 	command_name = strtok(data->message, " ");
 	message = strtok(NULL, "\n");
 
-	memset(broadcast_message, '\0', MAX_PRIVATE_MESSAGE_LENGTH);
+	memset(broadcast_message, '\0', MAX_BROADCAST_MESSAGE_LENGTH);
 	sprintf(broadcast_message, "Broadcast from %s: %s\n", data->username, message);
-	write_log("Broadcast message from user %s: %s\n", data->username, message);
+	write_log_format("Broadcast message from user %s: %s\n", data->username, message);
 	for(i = 0; i < MAX_NUM_OF_PLAYERS; i++)
 	{
 		if(data->all_users_sockets[i] != INVALID_SOCKET && data->all_users_sockets[i] != data->socket)
@@ -144,7 +144,7 @@ BOOL HandlePlayerTurnMessage(communication_data* data)
 		{
 			if(write_to_socket(data->all_users_sockets[i], data->message) == FALSE)
 			{
-				write_log("Failed to send player draw result, Error_code: 0x%x\n", GetLastError());
+				write_log_and_print("Failed to send player draw result, Error_code: 0x%x\n", GetLastError());
 				return FALSE;
 			}
 		}
@@ -153,7 +153,7 @@ BOOL HandlePlayerTurnMessage(communication_data* data)
 	turn_finished_event = InitEvent("TurnFinished");
 	if(turn_finished_event == NULL)
 	{
-		write_log("Failed to create TurnFinished Event, Error_code: 0x%x\n", GetLastError());
+		write_log_and_print("Failed to create TurnFinished Event, Error_code: 0x%x\n", GetLastError());
 		return FALSE;
 	}
 
@@ -173,7 +173,7 @@ BOOL HandlePlayeWonMessage(communication_data* data)
 		{
 			if(write_to_socket(data->all_users_sockets[i], data->message) == FALSE)
 			{
-				write_log("Failed to send player won message, Error_code: 0x%x\n", GetLastError());
+				write_log_and_print("Failed to send player won message, Error_code: 0x%x\n", GetLastError());
 				return FALSE;
 			}
 		}
@@ -181,7 +181,7 @@ BOOL HandlePlayeWonMessage(communication_data* data)
 	won_event = InitEvent("PlayerWon");
 	if(won_event == NULL)
 	{
-		write_log("Failed to create PlayerWon Event");
+		write_log_and_print("Failed to create PlayerWon Event, Error_code: 0x%x\n",GetLastError());
 		return FALSE;
 	}
 	SetEvent(won_event);
