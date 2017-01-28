@@ -62,11 +62,12 @@ void RunClient(int port, char *username)
 				break;
 				//If thread 1 finished, receive server msg
 			case WAIT_OBJECT_0 + 1:
-				if (HandleServerMessage(&communication, &ui, &board) == TRUE)
-					ExitGame(&communication, &ui, threads);
 				//Error occured while reading from the server
 				if (communication.communication_error == TRUE)
 					ExitGame(&communication, &ui, threads);
+				else if (HandleServerMessage(&communication, &ui, &board) == TRUE)
+					ExitGame(&communication, &ui, threads);
+				
 				break;
 		}
 	}
