@@ -41,51 +41,26 @@ BOOL HandleIncomingMessage(communication_data* data)
 	BOOL handle_result = TRUE;
 
 	lock_mutex(HANDLE_INCOMING_MESSAGE_MUTEX);
-
-	printf("Received message from user: %s, message: %s", data->username, data->message);
-	write_log("Received message from user: %s, message: %s", data->username, data->message);
+	
+	lock_mutex(BROADCAST_MUTEX);
 
 	if(strstr(data->message, "message") == data->message)
-	{
-		lock_mutex(BROADCAST_MUTEX);
 		handle_result = HandleSendMessage(data);
-		unlock_mutex(BROADCAST_MUTEX);
-	}
 	else if(strstr(data->message, "broadcast") == data->message)
-	{
-		lock_mutex(BROADCAST_MUTEX);
 		handle_result = HandleBroadcastMessage(data);
-		unlock_mutex(BROADCAST_MUTEX);
-	}
 	else if(strstr(data->message, "players") == data->message)
-	{
-		lock_mutex(BROADCAST_MUTEX);
 		handle_result = HandlePlayersMessage(data);
-		unlock_mutex(BROADCAST_MUTEX);
-	}
 	else if(strstr(data->message, "Player") == data->message)
 	{
 		if(strstr(data->message, "drew") != NULL)
-		{
-			lock_mutex(BROADCAST_MUTEX);
 			handle_result = HandlePlayerTurnMessage(data);
-			unlock_mutex(BROADCAST_MUTEX);
-		}
 		else if(strstr(data->message, "won") != NULL)
-		{
-			lock_mutex(BROADCAST_MUTEX);
 			handle_result = HandlePlayeWonMessage(data);
-			unlock_mutex(BROADCAST_MUTEX);
-		}
-		else
-		{
-			//todo: unknown message.. ignore?
-		}
+		// else: unknown message.. ignore
 	}
-	else
-	{
-		//todo: unknown message.. ignore?
-	}
+	// else: unknown message.. ignore
+
+	unlock_mutex(BROADCAST_MUTEX);
 
 	unlock_mutex(HANDLE_INCOMING_MESSAGE_MUTEX);
 
@@ -158,7 +133,7 @@ BOOL HandleBroadcastMessage(communication_data* data)
 
 BOOL HandlePlayerTurnMessage(communication_data* data)
 {
-	//Player <game piece> (<username>) drew a <toss result>
+	//Player <game piece> (<username>) drew a <dice result>.
 	int i = 0;
 	HANDLE turn_finished_event = NULL;
 
